@@ -33,6 +33,7 @@ import {
 } from "@carbon/react";
 import { useRouter } from "next/navigation";
 import { SuccessToast } from "@/components/success-toast";
+import { getApiUrl } from "@/lib/api-url";
 import { validateTextFields } from "@/lib/field-validation";
 import {
   type FormEvent,
@@ -41,8 +42,6 @@ import {
   useRef,
   useState,
 } from "react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 const FESTIVAL_OCCASIONS = ["Chhath Puja", "Durga Puja", "Kali Puja"] as const;
 type FestivalOccasion = (typeof FESTIVAL_OCCASIONS)[number];
@@ -369,7 +368,7 @@ export default function GhatsPage() {
     setError("");
     setIsLoading(true);
     try {
-      const profileResponse = await fetch(`${API_URL}/auth/me`, {
+      const profileResponse = await fetch(`${getApiUrl()}/auth/me`, {
         credentials: "include",
       });
       if (profileResponse.status === 401) {
@@ -380,7 +379,7 @@ export default function GhatsPage() {
         throw new Error("Unable to load your profile.");
       }
       const loadedProfile: UserProfile = await profileResponse.json();
-      const ghatsResponse = await fetch(`${API_URL}/ghats`, {
+      const ghatsResponse = await fetch(`${getApiUrl()}/ghats`, {
         credentials: "include",
       });
       if (ghatsResponse.status === 401) {
@@ -495,7 +494,9 @@ export default function GhatsPage() {
     setIsSaving(true);
     try {
       const response = await fetch(
-        editingGhat ? `${API_URL}/ghats/${editingGhat.id}` : `${API_URL}/ghats`,
+        editingGhat
+          ? `${getApiUrl()}/ghats/${editingGhat.id}`
+          : `${getApiUrl()}/ghats`,
         {
           method: editingGhat ? "PATCH" : "POST",
           credentials: "include",
@@ -537,7 +538,7 @@ export default function GhatsPage() {
     setError("");
     setIsSaving(true);
     try {
-      const response = await fetch(`${API_URL}/ghats/${ghatToDelete.id}`, {
+      const response = await fetch(`${getApiUrl()}/ghats/${ghatToDelete.id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -771,8 +772,8 @@ export default function GhatsPage() {
       inspectionPhotos.forEach((photo) => formData.append("photos", photo));
       const response = await fetch(
         editingInspection
-          ? `${API_URL}/inspections/${editingInspection.id}`
-          : `${API_URL}/ghats/${selectedGhat.id}/inspections`,
+          ? `${getApiUrl()}/inspections/${editingInspection.id}`
+          : `${getApiUrl()}/ghats/${selectedGhat.id}/inspections`,
         {
           method: editingInspection ? "PATCH" : "POST",
           credentials: "include",
@@ -816,7 +817,7 @@ export default function GhatsPage() {
 
     try {
       const response = await fetch(
-        `${API_URL}/inspections/${inspectionId}/photos/${photo.id}`,
+        `${getApiUrl()}/inspections/${inspectionId}/photos/${photo.id}`,
         { credentials: "include" },
       );
       if (response.status === 401) {
@@ -844,7 +845,7 @@ export default function GhatsPage() {
 
   async function handleLogout() {
     try {
-      const response = await fetch(`${API_URL}/auth/logout`, {
+      const response = await fetch(`${getApiUrl()}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });

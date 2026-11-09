@@ -16,9 +16,8 @@ import {
   Tile,
 } from "@carbon/react";
 import { useRouter } from "next/navigation";
+import { getApiUrl } from "@/lib/api-url";
 import { Fragment, useCallback, useEffect, useState } from "react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 type AreaKey =
   | "approachRoadsPathways"
@@ -334,7 +333,7 @@ export default function ReportsPage() {
     setError("");
     setIsLoading(true);
     try {
-      const profileResponse = await fetch(`${API_URL}/auth/me`, {
+      const profileResponse = await fetch(`${getApiUrl()}/auth/me`, {
         credentials: "include",
       });
       if (profileResponse.status === 401) {
@@ -346,7 +345,7 @@ export default function ReportsPage() {
       }
       setProfile(await profileResponse.json());
 
-      const reportResponse = await fetch(`${API_URL}/reports/action-taken`, {
+      const reportResponse = await fetch(`${getApiUrl()}/reports/action-taken`, {
         credentials: "include",
       });
       if (reportResponse.status === 401) {
@@ -374,7 +373,7 @@ export default function ReportsPage() {
 
   async function handleLogout() {
     try {
-      const response = await fetch(`${API_URL}/auth/logout`, {
+      const response = await fetch(`${getApiUrl()}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
@@ -906,7 +905,7 @@ function ReportPhotoGallery({
         photos.map(async (photo) => {
           try {
             const response = await fetch(
-              `${API_URL}/inspections/${inspectionId}/photos/${photo.id}`,
+              `${getApiUrl()}/inspections/${inspectionId}/photos/${photo.id}`,
               { credentials: "include" },
             );
             if (response.status === 401) {

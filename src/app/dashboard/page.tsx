@@ -17,9 +17,9 @@ import {
   Tile,
 } from "@carbon/react";
 import { useRouter } from "next/navigation";
+import { getApiUrl } from "@/lib/api-url";
 import { useEffect, useState } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const IS_DEMO_LOGIN =
   process.env.NODE_ENV === "development" &&
   process.env.NEXT_PUBLIC_DEMO_LOGIN === "true";
@@ -73,7 +73,7 @@ export default function DashboardPage() {
 
     async function loadProfile() {
       try {
-        const response = await fetch(`${API_URL}/auth/me`, {
+        const response = await fetch(`${getApiUrl()}/auth/me`, {
           credentials: "include",
         });
         if (response.status === 401) {
@@ -90,7 +90,7 @@ export default function DashboardPage() {
         const profile: UserProfile = await response.json();
         if (active) {
           setUser(profile);
-          const ghatsResponse = await fetch(`${API_URL}/ghats`, {
+          const ghatsResponse = await fetch(`${getApiUrl()}/ghats`, {
             credentials: "include",
           });
           if (!ghatsResponse.ok) {
@@ -125,7 +125,7 @@ export default function DashboardPage() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/auth/logout`, {
+      const response = await fetch(`${getApiUrl()}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });

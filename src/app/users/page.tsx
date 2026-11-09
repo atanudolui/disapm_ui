@@ -27,6 +27,7 @@ import {
 } from "@carbon/react";
 import { useRouter } from "next/navigation";
 import { SuccessToast } from "@/components/success-toast";
+import { getApiUrl } from "@/lib/api-url";
 import { validateTextFields } from "@/lib/field-validation";
 import {
   type FormEvent,
@@ -36,7 +37,6 @@ import {
   useState,
 } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const IS_DEMO_LOGIN =
   process.env.NODE_ENV === "development" &&
   process.env.NEXT_PUBLIC_DEMO_LOGIN === "true";
@@ -163,7 +163,7 @@ export default function UsersPage() {
         return;
       }
 
-      const profileResponse = await fetch(`${API_URL}/auth/me`, {
+      const profileResponse = await fetch(`${getApiUrl()}/auth/me`, {
         credentials: "include",
       });
       if (profileResponse.status === 401) {
@@ -179,7 +179,7 @@ export default function UsersPage() {
         return;
       }
 
-      const usersResponse = await fetch(`${API_URL}/users`, {
+      const usersResponse = await fetch(`${getApiUrl()}/users`, {
         credentials: "include",
       });
       if (usersResponse.status === 401) {
@@ -308,7 +308,9 @@ export default function UsersPage() {
         }
       } else {
         const response = await fetch(
-          editingUser ? `${API_URL}/users/${editingUser.id}` : `${API_URL}/users`,
+          editingUser
+            ? `${getApiUrl()}/users/${editingUser.id}`
+            : `${getApiUrl()}/users`,
           {
             method: editingUser ? "PATCH" : "POST",
             headers: { "Content-Type": "application/json" },
@@ -381,7 +383,7 @@ export default function UsersPage() {
         localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(updatedUsers));
         setUsers(updatedUsers);
       } else {
-        const response = await fetch(`${API_URL}/users/${userToDelete.id}`, {
+        const response = await fetch(`${getApiUrl()}/users/${userToDelete.id}`, {
           method: "DELETE",
           credentials: "include",
         });
@@ -422,7 +424,7 @@ export default function UsersPage() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/auth/logout`, {
+      const response = await fetch(`${getApiUrl()}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });

@@ -9,9 +9,9 @@ import {
 } from "@carbon/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { getApiUrl } from "@/lib/api-url";
 import { type FormEvent, useState } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const IS_DEMO_LOGIN =
   process.env.NODE_ENV === "development" &&
   process.env.NEXT_PUBLIC_DEMO_LOGIN === "true";
@@ -37,7 +37,7 @@ export default function LoginPage() {
     setError("");
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await fetch(`${getApiUrl()}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
