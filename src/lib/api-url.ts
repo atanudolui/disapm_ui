@@ -1,15 +1,21 @@
-const PRODUCTION_API_URL = "https://disapm-api-prod.up.railway.app";
-const PRODUCTION_FRONTEND_ORIGINS = new Set([
-  "https://disapm-prod.up.railway.app",
-  "https://disapm.in",
+const FRONTEND_API_URLS = new Map([
+  [
+    "https://disapm-prod.up.railway.app",
+    "https://disapm-api-prod.up.railway.app",
+  ],
+  ["https://disapm.in", "https://disapm-api-prod.up.railway.app"],
+  [
+    "https://disapm-stage.up.railway.app",
+    "https://disapm-api-stage.up.railway.app",
+  ],
 ]);
 
 export function getApiUrl(): string {
-  if (
-    typeof window !== "undefined" &&
-    PRODUCTION_FRONTEND_ORIGINS.has(window.location.origin)
-  ) {
-    return PRODUCTION_API_URL;
+  if (typeof window !== "undefined") {
+    const deploymentApiUrl = FRONTEND_API_URLS.get(window.location.origin);
+    if (deploymentApiUrl) {
+      return deploymentApiUrl;
+    }
   }
 
   const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
