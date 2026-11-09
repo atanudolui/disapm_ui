@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" role="img" aria-labelledby="title description">
+  <title id="title">Chhath Puja at sunrise</title>
+  <desc id="description">Devotees offer arghya to the rising sun beside a river, with baskets of fruit on the ghat steps.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#52165f"/>
+      <stop offset=".48" stop-color="#c33968"/>
+      <stop offset="1" stop-color="#ff9d42"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8a548"/>
+      <stop offset=".45" stop-color="#e85f62"/>
+      <stop offset="1" stop-color="#632c72"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff5a2"/>
+      <stop offset="1" stop-color="#ffbd50"/>
+    </linearGradient>
+    <pattern id="stars" width="82" height="66" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="16" r="1.5" fill="#fff3cf" opacity=".8"/>
+      <circle cx="63" cy="45" r="1" fill="#fff3cf" opacity=".65"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="650" fill="url(#sky)"/>
+  <rect width="1200" height="300" fill="url(#stars)" opacity=".55"/>
+  <circle cx="840" cy="233" r="128" fill="#ffc15b" opacity=".2"/>
+  <circle cx="840" cy="233" r="88" fill="url(#sun)"/>
+  <path d="M0 293c155-38 261-36 408-6 133 27 236 5 358-20 174-36 282-15 434 20v91H0Z" fill="#722b70" opacity=".7"/>
+  <path d="M0 340c158-31 296-20 441 11 168 36 300 5 446-17 119-18 205-12 313 9v307H0Z" fill="url(#water)"/>
+  <path d="M0 394c173-28 307 10 453 25 174 19 307-26 458-28 119-2 196 17 289 34M0 468c145-19 267 15 405 25 181 13 311-20 466-22 136-2 219 21 329 35M0 554c138-11 236 12 365 22 174 14 325-14 473-11 133 2 238 22 362 37" fill="none" stroke="#ffd277" stroke-width="5" stroke-linecap="round" opacity=".48"/>
+  <path d="M771 341h138M802 365h76M780 414h122M833 446h101M735 503h165M922 542h132" fill="none" stroke="#ffe0a2" stroke-width="7" stroke-linecap="round" opacity=".68"/>
+  <path d="M0 650V530h187v-50h133v-49h118v-45h106v264Z" fill="#39234f"/>
+  <path d="M0 529h188M188 479h133M321 430h118M439 386h106" stroke="#f28a61" stroke-width="8" opacity=".9"/>
+  <path d="M0 567h187M188 517h133M321 468h118M439 424h106" stroke="#d45c73" stroke-width="4" opacity=".8"/>
+  <g fill="#28203d">
+    <path d="M223 480c-10-25-3-47 15-54 18 7 24 29 15 54l17 49h-61Z"/>
+    <circle cx="238" cy="412" r="13"/>
+    <path d="M228 420h21l7 12h-33Z"/>
+    <path d="M341 430c-11-29-4-55 16-63 20 8 27 34 16 63l19 55h-69Z"/>
+    <circle cx="357" cy="352" r="15"/>
+    <path d="M345 361h24l8 13h-40Z"/>
+    <path d="M463 386c-12-34-4-64 18-73 23 9 31 39 19 73l20 66h-78Z"/>
+    <circle cx="481" cy="296" r="17"/>
+    <path d="M467 306h27l9 15h-45Z"/>
+  </g>
+  <g fill="none" stroke="#ffd166" stroke-width="7" stroke-linecap="round">
+    <path d="M244 432v-33l18-16M366 372v-36l21-18M490 320v-41l23-21"/>
+    <path d="M251 395q17-12 33 0-16 12-33 0ZM374 333q17-12 34 0-17 12-34 0ZM499 276q17-12 34 0-17 12-34 0Z"/>
+  </g>
+  <g>
+    <path d="M110 529q42-42 85 0Z" fill="#e99a37" stroke="#ffd166" stroke-width="5"/>
+    <path d="M127 517q-6-27 13-38 20 16 10 38M152 515q7-28 31-31 9 24-12 36" fill="#ef5d55"/>
+    <circle cx="166" cy="510" r="12" fill="#ffc857"/>
+    <path d="M608 475q49-47 99 0Z" fill="#e99a37" stroke="#ffd166" stroke-width="5"/>
+    <path d="M628 463q-4-31 17-39 18 19 9 39M655 462q7-30 34-32 7 26-15 38" fill="#ef5d55"/>
+    <circle cx="678" cy="456" r="13" fill="#ffc857"/>
+  </g>
+  <path d="M0 615c118-23 213-5 314 11 117 18 199 8 292-4 123-17 235-17 350 3 93 16 163 16 244 5v20H0Z" fill="#45234f" opacity=".78"/>
+</svg>
