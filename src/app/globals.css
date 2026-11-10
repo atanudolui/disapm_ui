@@ -1557,22 +1557,69 @@ body {
 }
 
 @media (max-width: 48rem) {
+  .cds--header.app-shell-header {
+    display: grid;
+    grid-template-areas:
+      "brand actions"
+      "navigation navigation";
+    grid-template-columns: minmax(0, 1fr) auto;
+    block-size: auto;
+    min-height: 3rem;
+    align-items: center;
+    padding-bottom: 0.25rem;
+  }
+
+  .app-shell-header .cds--header__name {
+    grid-area: brand;
+    min-width: 0;
+    padding-inline: 0.75rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
   .app-header__nav,
   .app-header__actions {
+    width: auto;
     gap: 0;
   }
 
   .app-header__nav {
-    margin-left: 0.25rem;
+    grid-area: navigation;
+    display: grid;
+    width: 100%;
+    height: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 0;
+  }
+
+  .app-header__nav > .cds--btn {
+    width: 100%;
+    max-width: none;
+    justify-content: flex-start;
+    padding-inline: 0.5rem;
+    text-align: left;
+    white-space: normal;
   }
 
   .app-header__actions {
-    padding-right: 0.25rem;
+    grid-area: actions;
+    height: auto;
+    margin-left: 0;
+    padding: 0 0.5rem 0 0;
   }
 
   .app-header__user {
-    max-width: 8rem;
+    max-width: 7rem;
     font-size: 0.75rem;
+  }
+
+  .dashboard-main,
+  .users-main {
+    padding-top: 10rem;
+  }
+
+  .report-main {
+    padding-top: 10rem;
   }
 
   .login-page {
@@ -1598,11 +1645,11 @@ body {
   }
 
   .dashboard-main {
-    padding: 2rem 0 4rem;
+    padding: 10rem 0 4rem;
   }
 
   .users-main {
-    padding: 2rem 0 4rem;
+    padding: 10rem 0 4rem;
   }
 
   .users-heading {
@@ -1684,6 +1731,19 @@ body {
 }
 
 @media (max-width: 32rem) {
+  .app-header__user {
+    display: none;
+  }
+
+  .app-shell-header .cds--header__name {
+    padding-inline: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .app-header__nav > .cds--btn {
+    font-size: 0.8125rem;
+  }
+
   .report-stats {
     grid-template-columns: 1fr;
   }
@@ -1721,4 +1781,8 @@ body {
   .inspection-photos__item {
     flex-wrap: wrap;
   }
+}
+
+a.cds--header__name:hover {
+  color: #fff !important;
 }
