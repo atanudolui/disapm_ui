@@ -19,7 +19,11 @@ export function getApiUrl(): string {
   }
 
   const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-  return configuredApiUrl
-    ? configuredApiUrl.replace(/\/+$/, "")
-    : "http://localhost:3001";
+  if (configuredApiUrl) {
+    return configuredApiUrl.replace(/\/+$/, "");
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("NEXT_PUBLIC_API_URL is not configured for this deployment.");
+  }
+  return "http://localhost:3001";
 }

@@ -20,6 +20,11 @@ The root page opens `/login`. Sign in using the NestJS API in `../backend`;
 successful authentication sets a short-lived HttpOnly JWT cookie. The dashboard
 checks the authenticated profile and links to the Users module for listing,
 adding, editing, and deleting user accounts.
+For Railway deployments, set `NEXT_PUBLIC_API_URL` to the corresponding API
+origin (for example, `https://disapm-api-stage.up.railway.app` for staging)
+and redeploy the frontend. The frontend also maps the production and staging
+site origins to their API origins; the variable is required for other
+production domains.
 Create the initial account with the backend's `npm run user:create` command.
 In development, sign-in and user management authenticate through the backend by
 default. To enable the browser-only demo mode, set
