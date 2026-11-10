@@ -1557,6 +1557,21 @@ body {
 }
 
 @media (max-width: 48rem) {
+  .users-main > .cds--css-grid,
+  .users-main > .cds--css-grid > .cds--css-grid-column {
+    min-width: 0;
+  }
+
+  .users-main > .cds--css-grid > .cds--css-grid-column {
+    grid-column: 1 / -1;
+  }
+
+  .users-main .users-table-tile,
+  .users-main .users-table-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+
   .cds--header.app-shell-header {
     display: grid;
     grid-template-areas:

@@ -1121,6 +1121,7 @@ export default function GhatsPage() {
                                     <OverflowMenu
                                       aria-label={`Actions for ${ghat.name}`}
                                       iconDescription={`Actions for ${ghat.name}`}
+                                      flipped
                                       size="sm"
                                     >
                                       <OverflowMenuItem

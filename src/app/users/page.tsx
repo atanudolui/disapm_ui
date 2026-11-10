@@ -647,6 +647,7 @@ export default function UsersPage() {
                                   <OverflowMenu
                                     aria-label={`Actions for ${user.username}`}
                                     iconDescription={`Actions for ${user.username}`}
+                                    flipped
                                     size="sm"
                                   >
                                     <OverflowMenuItem
