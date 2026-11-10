@@ -39,6 +39,8 @@ The authenticated workspace includes the ghat register, joint inspection
 checklists, deficiency rectification tracking, and a printable Action Taken
 Report with the seven-day deadline based on the order date.
 Ghat records include district, sub-division, block, and Nodal Officer details.
+User, ghat, and inspection forms open as full pages, with their form state
+available through the page URL.
 
 ## Available scripts
 
@@ -46,4 +48,5 @@ Ghat records include district, sub-division, block, and Nodal Officer details.
 - `npm run build` — create a production build
 - `npm run start` — serve the production build
 - `npm run lint` — run ESLint
+
 # disapm_ui

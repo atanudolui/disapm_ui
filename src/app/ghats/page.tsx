@@ -35,13 +35,7 @@ import { useRouter } from "next/navigation";
 import { SuccessToast } from "@/components/success-toast";
 import { getApiUrl } from "@/lib/api-url";
 import { validateTextFields } from "@/lib/field-validation";
-import {
-  type FormEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 
 const FESTIVAL_OCCASIONS = ["Chhath Puja", "Durga Puja", "Kali Puja"] as const;
 type FestivalOccasion = (typeof FESTIVAL_OCCASIONS)[number];
@@ -325,8 +319,6 @@ export default function GhatsPage() {
   const [ghatPage, setGhatPage] = useState(1);
   const [ghatPageSize, setGhatPageSize] = useState(10);
   const [ghatSearch, setGhatSearch] = useState("");
-  const ghatFormRef = useRef<HTMLFormElement>(null);
-  const inspectionFormRef = useRef<HTMLFormElement>(null);
   const normalizedGhatSearch = ghatSearch.trim().toLocaleLowerCase();
   const filteredGhats = (
     normalizedGhatSearch
@@ -416,16 +408,59 @@ export default function GhatsPage() {
     void Promise.resolve().then(loadWorkspace);
   }, [loadWorkspace]);
 
+  useEffect(() => {
+    function syncFormWithLocation() {
+      if (isLoading) return;
+      const params = new URLSearchParams(window.location.search);
+      const form = params.get("form");
+      if (form === "ghat-create") {
+        setEditingGhat(null);
+        setEditingInspection(null);
+        setSelectedGhat(null);
+        setGhatForm(EMPTY_GHAT_FORM);
+        setIsNodalOfficerRequired(false);
+        setFieldErrors({});
+        setError("");
+        setIsGhatModalOpen(true);
+        setIsInspectionModalOpen(false);
+      } else if (form === "ghat-edit") {
+        const ghat = ghats.find((item) => item.id === params.get("id"));
+        if (ghat) openEditGhat(ghat, false);
+      } else if (form === "inspection") {
+        const ghat = ghats.find((item) => item.id === params.get("ghatId"));
+        const inspectionId = params.get("inspectionId");
+        const inspection = ghat?.inspections.find(
+          (item) => item.id === inspectionId,
+        );
+        if (ghat && (!inspectionId || inspection)) {
+          openInspection(ghat, inspection, false);
+        }
+      } else {
+        setIsGhatModalOpen(false);
+        setIsInspectionModalOpen(false);
+        setEditingGhat(null);
+        setEditingInspection(null);
+      }
+    }
+
+    syncFormWithLocation();
+    window.addEventListener("popstate", syncFormWithLocation);
+    return () => window.removeEventListener("popstate", syncFormWithLocation);
+  }, [ghats, isLoading]);
+
   function openCreateGhat() {
+    setIsInspectionModalOpen(false);
     setEditingGhat(null);
     setGhatForm(EMPTY_GHAT_FORM);
     setIsNodalOfficerRequired(false);
     setFieldErrors({});
     setError("");
+    window.history.pushState(null, "", "/ghats?form=ghat-create");
     setIsGhatModalOpen(true);
   }
 
-  function openEditGhat(ghat: GhatRecord) {
+  function openEditGhat(ghat: GhatRecord, updateHistory = true) {
+    setIsInspectionModalOpen(false);
     setEditingGhat(ghat);
     setGhatForm({
       name: ghat.name,
@@ -441,7 +476,22 @@ export default function GhatsPage() {
     );
     setFieldErrors({});
     setError("");
+    if (updateHistory) {
+      window.history.pushState(
+        null,
+        "",
+        `/ghats?form=ghat-edit&id=${encodeURIComponent(ghat.id)}`,
+      );
+    }
     setIsGhatModalOpen(true);
+  }
+
+  function closeForm() {
+    window.history.replaceState(null, "", "/ghats");
+    setIsGhatModalOpen(false);
+    setIsInspectionModalOpen(false);
+    setEditingGhat(null);
+    setEditingInspection(null);
   }
 
   async function saveGhat(event: FormEvent<HTMLFormElement>) {
@@ -519,6 +569,7 @@ export default function GhatsPage() {
       if (!response.ok) {
         throw new Error(await readError(response, "Unable to save this ghat."));
       }
+      window.history.replaceState(null, "", "/ghats");
       setNotice(editingGhat ? "Ghat details updated." : "Ghat added.");
       setIsGhatModalOpen(false);
       await loadWorkspace();
@@ -567,7 +618,12 @@ export default function GhatsPage() {
     }
   }
 
-  function openInspection(ghat: GhatRecord, inspection?: InspectionRecord) {
+  function openInspection(
+    ghat: GhatRecord,
+    inspection?: InspectionRecord,
+    updateHistory = true,
+  ) {
+    setIsGhatModalOpen(false);
     setSelectedGhat(ghat);
     setEditingInspection(inspection ?? null);
     const today = new Date().toISOString().slice(0, 10);
@@ -605,6 +661,14 @@ export default function GhatsPage() {
     setInspectionForm(form);
     setFieldErrors({});
     setError("");
+    if (updateHistory) {
+      const query = new URLSearchParams({
+        form: "inspection",
+        ghatId: ghat.id,
+      });
+      if (inspection) query.set("inspectionId", inspection.id);
+      window.history.pushState(null, "", `/ghats?${query.toString()}`);
+    }
     setIsInspectionModalOpen(true);
   }
 
@@ -789,6 +853,7 @@ export default function GhatsPage() {
           await readError(response, "Unable to save this inspection."),
         );
       }
+      window.history.replaceState(null, "", "/ghats");
       setNotice(
         editingInspection ? "Inspection updated." : "Inspection recorded.",
       );
@@ -899,795 +964,898 @@ export default function GhatsPage() {
         <SuccessToast message={notice} onClose={() => setNotice("")} />
       )}
 
-      <main className="users-main" id="main-content">
-        <Grid>
-          <Column sm={4} md={8} lg={16}>
-            <div className="users-heading">
-              <div>
-                <p className="dashboard-eyebrow">FIELD OPERATIONS</p>
-                <h1 className="dashboard-title">Ghat Readiness</h1>
-                <p className="dashboard-description">
-                  Maintain ghat details, coordinate inspections and track safety
-                  arrangements throughout the year.
-                </p>
-              </div>
-            </div>
-            {error && !isGhatModalOpen && !isInspectionModalOpen && (
-              <InlineNotification
-                kind="error"
-                lowContrast
-                title="Ghat register error"
-                subtitle={error}
-              />
-            )}
-          </Column>
-          <Column sm={4} md={8} lg={16}>
-            <Tile className="users-table-tile">
-              {isLoading ? (
-                <p role="status">Loading ghat register...</p>
-              ) : ghats.length === 0 ? (
-                <div className="users-empty">
-                  <h2>No ghats have been added</h2>
-                  <p>
-                    Add a river or pond ghat to begin recording readiness
-                    inspections.
+      {!isGhatModalOpen && !isInspectionModalOpen && (
+        <main className="users-main" id="main-content">
+          <Grid>
+            <Column sm={4} md={8} lg={16}>
+              <div className="users-heading">
+                <div>
+                  <p className="dashboard-eyebrow">FIELD OPERATIONS</p>
+                  <h1 className="dashboard-title">Ghat Readiness</h1>
+                  <p className="dashboard-description">
+                    Maintain ghat details, coordinate inspections and track
+                    safety arrangements throughout the year.
                   </p>
-                  <Button renderIcon={Add} onClick={openCreateGhat}>
-                    Add first ghat
-                  </Button>
                 </div>
-              ) : (
-                <div className="users-table-wrapper">
-                  <div className="users-table-toolbar">
-                    <Search
-                      className="table-search"
-                      id="ghats-search"
-                      labelText="Search ghats"
-                      placeholder="Search by ghat, district, officer..."
-                      size="lg"
-                      value={ghatSearch}
-                      onChange={(event) => {
-                        setGhatSearch(event.currentTarget.value);
-                        setGhatPage(1);
-                      }}
-                      onClear={() => {
-                        setGhatSearch("");
-                        setGhatPage(1);
-                      }}
-                    />
+              </div>
+              {error && !isGhatModalOpen && !isInspectionModalOpen && (
+                <InlineNotification
+                  kind="error"
+                  lowContrast
+                  title="Ghat register error"
+                  subtitle={error}
+                />
+              )}
+            </Column>
+            <Column sm={4} md={8} lg={16}>
+              <Tile className="users-table-tile">
+                {isLoading ? (
+                  <p role="status">Loading ghat register...</p>
+                ) : ghats.length === 0 ? (
+                  <div className="users-empty">
+                    <h2>No ghats have been added</h2>
+                    <p>
+                      Add a river or pond ghat to begin recording readiness
+                      inspections.
+                    </p>
                     <Button renderIcon={Add} onClick={openCreateGhat}>
-                      Add Ghat
+                      Add first ghat
                     </Button>
                   </div>
-                  {filteredGhats.length === 0 ? (
-                    <div className="users-empty">
-                      <h2>No ghats match your search</h2>
-                      <p>Try a different ghat, district, or officer.</p>
-                    </div>
-                  ) : (
-                    <>
-                      <table className="cds--data-table cds--data-table--zebra users-table">
-                        <thead>
-                          <tr>
-                            <th scope="col">Ghat</th>
-                            <th scope="col">District</th>
-                            <th scope="col">Sub-Division</th>
-                            <th scope="col">Block</th>
-                            <th scope="col">Nodal Officer</th>
-                            <th scope="col">Latest inspection</th>
-                            <th scope="col">Readiness</th>
-                            <th scope="col">
-                              <span className="visually-hidden">Actions</span>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {visibleGhats.map((ghat) => {
-                            const latest = ghat.inspections[0];
-                            const pending =
-                              latest?.deficiencies.filter(
-                                (item) => item.status === "pending",
-                              ).length ?? 0;
-                            const deficientAreas = latest
-                              ? INSPECTION_AREAS.filter(
-                                  ({ key }) =>
-                                    latest.checklist[key]?.status ===
-                                    "deficiency",
-                                ).length
-                              : 0;
-                            return (
-                              <tr key={ghat.id}>
-                                <td>
-                                  <strong>{ghat.name}</strong>
-                                  <div className="ghat-table__meta">
-                                    {ghat.waterbodyType === "river"
-                                      ? "River"
-                                      : "Pond"}
-                                  </div>
-                                </td>
-                                <td>{ghat.district}</td>
-                                <td>{ghat.subDivision || "—"}</td>
-                                <td>{ghat.block || "—"}</td>
-                                <td>
-                                  {ghat.nodalOfficerName}
-                                  <div className="ghat-table__meta">
-                                    {ghat.nodalOfficerContact}
-                                  </div>
-                                </td>
-                                <td>
-                                  {latest ? (
-                                    <>
-                                      {formatDateRange(
-                                        latest.periodStart,
-                                        latest.periodEnd,
-                                      )}
-                                      <div className="ghat-table__meta">
-                                        {latest.occasion}
-                                      </div>
-                                      {latest.latitude != null &&
-                                        latest.longitude != null && (
-                                          <div className="ghat-table__meta">
-                                            {latest.latitude},{" "}
-                                            {latest.longitude}
-                                          </div>
-                                        )}
-                                    </>
-                                  ) : (
-                                    <span className="ghat-table__meta">
-                                      Not inspected
-                                    </span>
-                                  )}
-                                </td>
-                                <td>
-                                  {!latest ? (
-                                    <Tag type="cool-gray">Not inspected</Tag>
-                                  ) : pending > 0 ? (
-                                    <Tag type="red">{pending} pending</Tag>
-                                  ) : deficientAreas > 0 ? (
-                                    <Tag type="green">
-                                      All tracked items rectified
-                                    </Tag>
-                                  ) : (
-                                    <Tag type="green">Ready</Tag>
-                                  )}
-                                </td>
-                                <td className="users-table__actions">
-                                  <OverflowMenu
-                                    aria-label={`Actions for ${ghat.name}`}
-                                    iconDescription={`Actions for ${ghat.name}`}
-                                    size="sm"
-                                  >
-                                    <OverflowMenuItem
-                                      itemText={
-                                        latest ? "Update Inspection" : "Inspect"
-                                      }
-                                      onClick={() =>
-                                        openInspection(ghat, latest)
-                                      }
-                                    />
-                                    <OverflowMenuItem
-                                      itemText="Edit"
-                                      onClick={() => openEditGhat(ghat)}
-                                    />
-                                    <OverflowMenuItem
-                                      itemText="Delete"
-                                      isDelete
-                                      hasDivider
-                                      onClick={() => setGhatToDelete(ghat)}
-                                    />
-                                  </OverflowMenu>
-                                  {ghat.inspections.length > 1 && (
-                                    <details className="ghat-history">
-                                      <summary>
-                                        {ghat.inspections.length - 1} earlier
-                                        inspection
-                                        {ghat.inspections.length === 2
-                                          ? ""
-                                          : "s"}
-                                      </summary>
-                                      {ghat.inspections
-                                        .slice(1)
-                                        .map((inspection) => (
-                                          <div
-                                            className="ghat-history__item"
-                                            key={inspection.id}
-                                          >
-                                            <span>
-                                              {formatDateRange(
-                                                inspection.periodStart,
-                                                inspection.periodEnd,
-                                              )}{" "}
-                                              · {inspection.occasion}
-                                            </span>
-                                            <Button
-                                              kind="ghost"
-                                              size="sm"
-                                              onClick={() =>
-                                                openInspection(ghat, inspection)
-                                              }
-                                            >
-                                              Edit
-                                            </Button>
-                                          </div>
-                                        ))}
-                                    </details>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                      <Pagination
-                        id="ghats-pagination"
-                        page={currentGhatPage}
-                        pageSize={ghatPageSize}
-                        pageSizes={[10, 20, 50]}
-                        totalItems={filteredGhats.length}
-                        onChange={({ page, pageSize }) => {
-                          setGhatPage(page);
-                          setGhatPageSize(pageSize);
+                ) : (
+                  <div className="users-table-wrapper">
+                    <div className="users-table-toolbar">
+                      <Search
+                        className="table-search"
+                        id="ghats-search"
+                        labelText="Search ghats"
+                        placeholder="Search by ghat, district, officer..."
+                        size="lg"
+                        value={ghatSearch}
+                        onChange={(event) => {
+                          setGhatSearch(event.currentTarget.value);
+                          setGhatPage(1);
+                        }}
+                        onClear={() => {
+                          setGhatSearch("");
+                          setGhatPage(1);
                         }}
                       />
-                    </>
-                  )}
-                </div>
-              )}
-            </Tile>
-          </Column>
-        </Grid>
-      </main>
+                      <Button renderIcon={Add} onClick={openCreateGhat}>
+                        Add Ghat
+                      </Button>
+                    </div>
+                    {filteredGhats.length === 0 ? (
+                      <div className="users-empty">
+                        <h2>No ghats match your search</h2>
+                        <p>Try a different ghat, district, or officer.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <table className="cds--data-table cds--data-table--zebra users-table">
+                          <thead>
+                            <tr>
+                              <th scope="col">Ghat</th>
+                              <th scope="col">District</th>
+                              <th scope="col">Sub-Division</th>
+                              <th scope="col">Block</th>
+                              <th scope="col">Nodal Officer</th>
+                              <th scope="col">Latest inspection</th>
+                              <th scope="col">Readiness</th>
+                              <th scope="col">
+                                <span className="visually-hidden">Actions</span>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {visibleGhats.map((ghat) => {
+                              const latest = ghat.inspections[0];
+                              const pending =
+                                latest?.deficiencies.filter(
+                                  (item) => item.status === "pending",
+                                ).length ?? 0;
+                              const deficientAreas = latest
+                                ? INSPECTION_AREAS.filter(
+                                    ({ key }) =>
+                                      latest.checklist[key]?.status ===
+                                      "deficiency",
+                                  ).length
+                                : 0;
+                              return (
+                                <tr key={ghat.id}>
+                                  <td>
+                                    <strong>{ghat.name}</strong>
+                                    <div className="ghat-table__meta">
+                                      {ghat.waterbodyType === "river"
+                                        ? "River"
+                                        : "Pond"}
+                                    </div>
+                                  </td>
+                                  <td>{ghat.district}</td>
+                                  <td>{ghat.subDivision || "—"}</td>
+                                  <td>{ghat.block || "—"}</td>
+                                  <td>
+                                    {ghat.nodalOfficerName}
+                                    <div className="ghat-table__meta">
+                                      {ghat.nodalOfficerContact}
+                                    </div>
+                                  </td>
+                                  <td>
+                                    {latest ? (
+                                      <>
+                                        {formatDateRange(
+                                          latest.periodStart,
+                                          latest.periodEnd,
+                                        )}
+                                        <div className="ghat-table__meta">
+                                          {latest.occasion}
+                                        </div>
+                                        {latest.latitude != null &&
+                                          latest.longitude != null && (
+                                            <div className="ghat-table__meta">
+                                              {latest.latitude},{" "}
+                                              {latest.longitude}
+                                            </div>
+                                          )}
+                                      </>
+                                    ) : (
+                                      <span className="ghat-table__meta">
+                                        Not inspected
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {!latest ? (
+                                      <Tag type="cool-gray">Not inspected</Tag>
+                                    ) : pending > 0 ? (
+                                      <Tag type="red">{pending} pending</Tag>
+                                    ) : deficientAreas > 0 ? (
+                                      <Tag type="green">
+                                        All tracked items rectified
+                                      </Tag>
+                                    ) : (
+                                      <Tag type="green">Ready</Tag>
+                                    )}
+                                  </td>
+                                  <td className="users-table__actions">
+                                    <OverflowMenu
+                                      aria-label={`Actions for ${ghat.name}`}
+                                      iconDescription={`Actions for ${ghat.name}`}
+                                      size="sm"
+                                    >
+                                      <OverflowMenuItem
+                                        itemText={
+                                          latest
+                                            ? "Update Inspection"
+                                            : "Inspect"
+                                        }
+                                        onClick={() =>
+                                          openInspection(ghat, latest)
+                                        }
+                                      />
+                                      <OverflowMenuItem
+                                        itemText="Edit"
+                                        onClick={() => openEditGhat(ghat)}
+                                      />
+                                      <OverflowMenuItem
+                                        itemText="Delete"
+                                        isDelete
+                                        hasDivider
+                                        onClick={() => setGhatToDelete(ghat)}
+                                      />
+                                    </OverflowMenu>
+                                    {ghat.inspections.length > 1 && (
+                                      <details className="ghat-history">
+                                        <summary>
+                                          {ghat.inspections.length - 1} earlier
+                                          inspection
+                                          {ghat.inspections.length === 2
+                                            ? ""
+                                            : "s"}
+                                        </summary>
+                                        {ghat.inspections
+                                          .slice(1)
+                                          .map((inspection) => (
+                                            <div
+                                              className="ghat-history__item"
+                                              key={inspection.id}
+                                            >
+                                              <span>
+                                                {formatDateRange(
+                                                  inspection.periodStart,
+                                                  inspection.periodEnd,
+                                                )}{" "}
+                                                · {inspection.occasion}
+                                              </span>
+                                              <Button
+                                                kind="ghost"
+                                                size="sm"
+                                                onClick={() =>
+                                                  openInspection(
+                                                    ghat,
+                                                    inspection,
+                                                  )
+                                                }
+                                              >
+                                                Edit
+                                              </Button>
+                                            </div>
+                                          ))}
+                                      </details>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                        <Pagination
+                          id="ghats-pagination"
+                          page={currentGhatPage}
+                          pageSize={ghatPageSize}
+                          pageSizes={[10, 20, 50]}
+                          totalItems={filteredGhats.length}
+                          onChange={({ page, pageSize }) => {
+                            setGhatPage(page);
+                            setGhatPageSize(pageSize);
+                          }}
+                        />
+                      </>
+                    )}
+                  </div>
+                )}
+              </Tile>
+            </Column>
+          </Grid>
+        </main>
+      )}
 
-      <Modal
-        open={isGhatModalOpen}
-        modalHeading={editingGhat ? "Edit ghat" : "Add Ghat"}
-        primaryButtonText={isSaving ? "Saving..." : "Save Ghat"}
-        secondaryButtonText="Cancel"
-        primaryButtonDisabled={isSaving}
-        onRequestClose={() => setIsGhatModalOpen(false)}
-        onRequestSubmit={() => ghatFormRef.current?.requestSubmit()}
-      >
-        {error && (
-          <InlineNotification
-            kind="error"
-            lowContrast
-            title="Unable to save ghat"
-            subtitle={error}
-          />
-        )}
-        <form
-          ref={ghatFormRef}
-          className="ghat-form"
-          onSubmit={(event) => void saveGhat(event)}
-        >
-          <TextInput
-            id="ghat-name"
-            labelText="Ghat name"
-            invalid={Boolean(fieldErrors["ghat-name"])}
-            invalidText={fieldErrors["ghat-name"]}
-            value={ghatForm.name}
-            onChange={(event) => {
-              setGhatForm({ ...ghatForm, name: event.currentTarget.value });
-              setFieldErrors((current) => ({ ...current, "ghat-name": "" }));
-            }}
-            maxLength={160}
-          />
-          <Select
-            id="ghat-waterbody"
-            labelText="Waterbody type"
-            value={ghatForm.waterbodyType}
-            onChange={(event) =>
-              setGhatForm({
-                ...ghatForm,
-                waterbodyType:
-                  event.currentTarget.value === "pond" ? "pond" : "river",
-              })
-            }
-          >
-            <SelectItem value="pond" text="Pond" />
-            <SelectItem value="river" text="River" />
-          </Select>
-          <TextInput
-            id="ghat-district"
-            labelText="District"
-            invalid={Boolean(fieldErrors["ghat-district"])}
-            invalidText={fieldErrors["ghat-district"]}
-            value={ghatForm.district}
-            onChange={(event) => {
-              setGhatForm({ ...ghatForm, district: event.currentTarget.value });
-              setFieldErrors((current) => ({
-                ...current,
-                "ghat-district": "",
-              }));
-            }}
-            readOnly
-            maxLength={120}
-          />
-          <Select
-            id="ghat-subdivision"
-            labelText="Sub-Division"
-            invalid={Boolean(fieldErrors["ghat-subdivision"])}
-            invalidText={fieldErrors["ghat-subdivision"]}
-            value={ghatForm.subDivision}
-            onChange={(event) => {
-              setGhatForm({
-                ...ghatForm,
-                subDivision: event.currentTarget.value,
-              });
-              setFieldErrors((current) => ({
-                ...current,
-                "ghat-subdivision": "",
-              }));
-            }}
-          >
-            <SelectItem value="" text="Select a sub-division" />
-            {SUB_DIVISIONS.map((subDivision) => (
-              <SelectItem
-                key={subDivision}
-                value={subDivision}
-                text={subDivision}
-              />
-            ))}
-          </Select>
-          <Select
-            id="ghat-block"
-            labelText="Block"
-            invalid={Boolean(fieldErrors["ghat-block"])}
-            invalidText={fieldErrors["ghat-block"]}
-            value={ghatForm.block}
-            onChange={(event) => {
-              setGhatForm({ ...ghatForm, block: event.currentTarget.value });
-              setFieldErrors((current) => ({ ...current, "ghat-block": "" }));
-            }}
-          >
-            <SelectItem value="" text="Select a block" />
-            {BLOCKS.map((block) => (
-              <SelectItem key={block} value={block} text={block} />
-            ))}
-          </Select>
-          <div className="ghat-form__nodal-officer">
-            <Checkbox
-              id="ghat-nodal-required"
-              labelText="Is Nodal Officer required"
-              checked={isNodalOfficerRequired}
-              onChange={(_event, { checked }) => {
-                setIsNodalOfficerRequired(checked);
-                if (!checked) {
-                  setGhatForm({
-                    ...ghatForm,
-                    nodalOfficerName: "",
-                    nodalOfficerContact: "",
-                  });
-                  setFieldErrors((current) => ({
-                    ...current,
-                    "ghat-nodal-name": "",
-                    "ghat-nodal-contact": "",
-                  }));
-                }
-              }}
-            />
-            {isNodalOfficerRequired && (
-              <>
+      {isGhatModalOpen && (
+        <main className="users-main form-page" id="main-content">
+          <Grid>
+            <Column sm={4} md={8} lg={10} className="form-page__column">
+              <div className="users-heading form-page__heading">
+                <div>
+                  <p className="dashboard-eyebrow">GHAT REGISTER</p>
+                  <h1 className="dashboard-title">
+                    {editingGhat ? "Edit ghat" : "Add ghat"}
+                  </h1>
+                  <p className="dashboard-description">
+                    Enter the ghat and nodal officer details.
+                  </p>
+                </div>
+                <Button
+                  kind="secondary"
+                  renderIcon={ArrowLeft}
+                  onClick={closeForm}
+                >
+                  Back to ghats
+                </Button>
+              </div>
+              {error && (
+                <InlineNotification
+                  kind="error"
+                  lowContrast
+                  title="Unable to save ghat"
+                  subtitle={error}
+                />
+              )}
+              <form
+                className="ghat-form form-page__surface"
+                onSubmit={(event) => void saveGhat(event)}
+              >
                 <TextInput
-                  id="ghat-nodal-name"
-                  labelText="Nodal Officer"
-                  invalid={Boolean(fieldErrors["ghat-nodal-name"])}
-                  invalidText={fieldErrors["ghat-nodal-name"]}
-                  value={ghatForm.nodalOfficerName}
+                  id="ghat-name"
+                  labelText="Ghat name"
+                  invalid={Boolean(fieldErrors["ghat-name"])}
+                  invalidText={fieldErrors["ghat-name"]}
+                  value={ghatForm.name}
                   onChange={(event) => {
                     setGhatForm({
                       ...ghatForm,
-                      nodalOfficerName: event.currentTarget.value,
+                      name: event.currentTarget.value,
                     });
                     setFieldErrors((current) => ({
                       ...current,
-                      "ghat-nodal-name": "",
+                      "ghat-name": "",
                     }));
                   }}
                   maxLength={160}
                 />
+                <Select
+                  id="ghat-waterbody"
+                  labelText="Waterbody type"
+                  value={ghatForm.waterbodyType}
+                  onChange={(event) =>
+                    setGhatForm({
+                      ...ghatForm,
+                      waterbodyType:
+                        event.currentTarget.value === "pond" ? "pond" : "river",
+                    })
+                  }
+                >
+                  <SelectItem value="pond" text="Pond" />
+                  <SelectItem value="river" text="River" />
+                </Select>
                 <TextInput
-                  id="ghat-nodal-contact"
-                  labelText="Nodal Officer contact"
-                  invalid={Boolean(fieldErrors["ghat-nodal-contact"])}
-                  invalidText={fieldErrors["ghat-nodal-contact"]}
-                  value={ghatForm.nodalOfficerContact}
+                  id="ghat-district"
+                  labelText="District"
+                  invalid={Boolean(fieldErrors["ghat-district"])}
+                  invalidText={fieldErrors["ghat-district"]}
+                  value={ghatForm.district}
                   onChange={(event) => {
                     setGhatForm({
                       ...ghatForm,
-                      nodalOfficerContact: event.currentTarget.value,
+                      district: event.currentTarget.value,
                     });
                     setFieldErrors((current) => ({
                       ...current,
-                      "ghat-nodal-contact": "",
+                      "ghat-district": "",
                     }));
                   }}
-                  maxLength={80}
+                  readOnly
+                  maxLength={120}
                 />
-              </>
-            )}
-          </div>
-        </form>
-      </Modal>
-
-      <Modal
-        className="inspection-modal"
-        open={isInspectionModalOpen}
-        modalHeading={
-          editingInspection ? "Update Inspection" : "Record Inspection"
-        }
-        primaryButtonText={isSaving ? "Saving..." : "Save Inspection"}
-        secondaryButtonText="Cancel"
-        primaryButtonDisabled={isSaving}
-        size="lg"
-        onRequestClose={() => setIsInspectionModalOpen(false)}
-        onRequestSubmit={() => inspectionFormRef.current?.requestSubmit()}
-      >
-        {error && (
-          <InlineNotification
-            kind="error"
-            lowContrast
-            title="Unable to save inspection"
-            subtitle={error}
-          />
-        )}
-        <form
-          ref={inspectionFormRef}
-          className="inspection-form"
-          onSubmit={(event) => void saveInspection(event)}
-        >
-          <p className="inspection-form__ghat">
-            {selectedGhat?.name} · {selectedGhat?.district}
-          </p>
-          <div className="inspection-form__event-details">
-            <Select
-              id="inspection-occasion"
-              labelText="Festival / occasion"
-              value={occasion}
-              invalid={Boolean(fieldErrors["inspection-occasion"])}
-              invalidText={fieldErrors["inspection-occasion"]}
-              onChange={(event) => {
-                const value = event.currentTarget.value;
-                setOccasion(isFestivalOccasion(value) ? value : "");
-                setFieldErrors((current) => ({
-                  ...current,
-                  "inspection-occasion": "",
-                }));
-              }}
-            >
-              <SelectItem value="" text="Select a festival or occasion" />
-              {FESTIVAL_OCCASIONS.map((festival) => (
-                <SelectItem key={festival} value={festival} text={festival} />
-              ))}
-            </Select>
-            <fieldset className="inspection-period">
-              {/* <legend>Period for Festival / occasion</legend> */}
-              <DatePicker
-                datePickerType="range"
-                dateFormat="m/d/Y"
-                value={[periodStart, periodEnd]
-                  .map(inputValueToDate)
-                  .filter((date): date is Date => date !== undefined)}
-                onChange={(dates) => {
-                  setPeriodStart(dates[0] ? dateToInputValue(dates[0]) : "");
-                  setPeriodEnd(dates[1] ? dateToInputValue(dates[1]) : "");
-                  setFieldErrors((current) => ({
-                    ...current,
-                    "inspection-period-start": "",
-                    "inspection-period-end": "",
-                  }));
-                }}
-              >
-                <DatePickerInput
-                  id="inspection-period-start"
-                  labelText="Period From"
-                  placeholder="mm/dd/yyyy"
-                  invalid={Boolean(fieldErrors["inspection-period-start"])}
-                  invalidText={fieldErrors["inspection-period-start"]}
-                />
-                <DatePickerInput
-                  id="inspection-period-end"
-                  labelText="Period To"
-                  placeholder="mm/dd/yyyy"
-                  invalid={Boolean(fieldErrors["inspection-period-end"])}
-                  invalidText={fieldErrors["inspection-period-end"]}
-                />
-              </DatePicker>
-            </fieldset>
-          </div>
-          <div className="inspection-form__event-details">
-            <TextInput
-              id="inspection-latitude"
-              type="number"
-              step="any"
-              min="-90"
-              max="90"
-              labelText="Latitude"
-              invalid={Boolean(fieldErrors["inspection-latitude"])}
-              invalidText={fieldErrors["inspection-latitude"]}
-              value={latitude}
-              onChange={(event) => {
-                setLatitude(event.currentTarget.value);
-                setLocationError("");
-                setFieldErrors((current) => ({
-                  ...current,
-                  "inspection-latitude": "",
-                }));
-              }}
-            />
-            <TextInput
-              id="inspection-longitude"
-              type="number"
-              step="any"
-              min="-180"
-              max="180"
-              labelText="Longitude"
-              invalid={Boolean(fieldErrors["inspection-longitude"])}
-              invalidText={fieldErrors["inspection-longitude"]}
-              value={longitude}
-              onChange={(event) => {
-                setLongitude(event.currentTarget.value);
-                setLocationError("");
-                setFieldErrors((current) => ({
-                  ...current,
-                  "inspection-longitude": "",
-                }));
-              }}
-            />
-          </div>
-          <div className="inspection-form__location">
-            <Button
-              kind="tertiary"
-              size="sm"
-              type="button"
-              renderIcon={LocationCurrent}
-              disabled={isGettingLocation || isSaving}
-              onClick={useCurrentLocation}
-            >
-              {isGettingLocation ? "Getting location..." : "Use current location"}
-            </Button>
-            {isGettingLocation && (
-              <p className="inspection-form__location-status" role="status">
-                Waiting for location permission and GPS...
-              </p>
-            )}
-            {locationError && (
-              <p className="cds--form-requirement" role="alert">
-                {locationError}
-              </p>
-            )}
-          </div>
-          <div className="inspection-form__photos">
-            <p className="cds--label">Inspection photos</p>
-            <FileUploaderDropContainer
-              id="inspection-photos"
-              accept={["image/jpeg", "image/png", "image/webp"]}
-              multiple
-              labelText="Drag and drop photos here or click to upload"
-              maxFileSize={2 * 1024 * 1024}
-              disabled={
-                (editingInspection?.photos.length ?? 0) -
-                  photosToRemove.length +
-                  inspectionPhotos.length >=
-                2
-              }
-              aria-describedby={
-                fieldErrors["inspection-photos"]
-                  ? "inspection-photos-help inspection-photos-error"
-                  : "inspection-photos-help"
-              }
-              onAddFiles={(_, { addedFiles }) => {
-                const availableSlots =
-                  2 -
-                  ((editingInspection?.photos.length ?? 0) -
-                    photosToRemove.length) -
-                  inspectionPhotos.length;
-                const validPhotos = addedFiles.filter(
-                  (photo) =>
-                    !photo.invalidFileType &&
-                    ["image/jpeg", "image/png", "image/webp"].includes(
-                      photo.type,
-                    ) && photo.size <= 2 * 1024 * 1024,
-                );
-                if (
-                  validPhotos.length !== addedFiles.length ||
-                  addedFiles.length > availableSlots
-                ) {
-                  setFieldErrors((current) => ({
-                    ...current,
-                    "inspection-photos":
-                      "Choose up to 2 JPEG, PNG, or WebP photos total, each no larger than 2 MB.",
-                  }));
-                } else {
-                  setInspectionPhotos((current) => [
-                    ...current,
-                    ...validPhotos,
-                  ]);
-                  setFieldErrors((current) => ({
-                    ...current,
-                    "inspection-photos": "",
-                  }));
-                }
-              }}
-            />
-            <p className="inspection-photos__help" id="inspection-photos-help">
-              JPEG, PNG, or WebP. Up to 2 photos, 2 MB each.
-            </p>
-            {((editingInspection?.photos.length ?? 0) -
-              photosToRemove.length >
-              0 ||
-              inspectionPhotos.length > 0) && (
-              <ul
-                className="inspection-photos__list"
-                aria-label="Attached inspection photos"
-              >
-                {editingInspection?.photos
-                  .filter((photo) => !photosToRemove.includes(photo.id))
-                  .map((photo) => (
-                    <li className="inspection-photos__item" key={photo.id}>
-                      <FileUploaderItem
-                        name={photo.fileName}
-                        status="complete"
-                        iconDescription="Photo attached"
-                      />
-                      <Button
-                        kind="ghost"
-                        size="sm"
-                        onClick={() =>
-                          void viewInspectionPhoto(editingInspection.id, photo)
-                        }
-                      >
-                        View
-                      </Button>
-                      <Button
-                        kind="danger--tertiary"
-                        size="sm"
-                        type="button"
-                        onClick={() =>
-                          setPhotosToRemove((current) => [
-                            ...current,
-                            photo.id,
-                          ])
-                        }
-                      >
-                        Remove
-                      </Button>
-                    </li>
+                <Select
+                  id="ghat-subdivision"
+                  labelText="Sub-Division"
+                  invalid={Boolean(fieldErrors["ghat-subdivision"])}
+                  invalidText={fieldErrors["ghat-subdivision"]}
+                  value={ghatForm.subDivision}
+                  onChange={(event) => {
+                    setGhatForm({
+                      ...ghatForm,
+                      subDivision: event.currentTarget.value,
+                    });
+                    setFieldErrors((current) => ({
+                      ...current,
+                      "ghat-subdivision": "",
+                    }));
+                  }}
+                >
+                  <SelectItem value="" text="Select a sub-division" />
+                  {SUB_DIVISIONS.map((subDivision) => (
+                    <SelectItem
+                      key={subDivision}
+                      value={subDivision}
+                      text={subDivision}
+                    />
                   ))}
-                {inspectionPhotos.map((photo, index) => (
-                  <li
-                    className="inspection-photos__item"
-                    key={`${photo.name}-${index}`}
+                </Select>
+                <Select
+                  id="ghat-block"
+                  labelText="Block"
+                  invalid={Boolean(fieldErrors["ghat-block"])}
+                  invalidText={fieldErrors["ghat-block"]}
+                  value={ghatForm.block}
+                  onChange={(event) => {
+                    setGhatForm({
+                      ...ghatForm,
+                      block: event.currentTarget.value,
+                    });
+                    setFieldErrors((current) => ({
+                      ...current,
+                      "ghat-block": "",
+                    }));
+                  }}
+                >
+                  <SelectItem value="" text="Select a block" />
+                  {BLOCKS.map((block) => (
+                    <SelectItem key={block} value={block} text={block} />
+                  ))}
+                </Select>
+                <div className="ghat-form__nodal-officer">
+                  <Checkbox
+                    id="ghat-nodal-required"
+                    labelText="Is Nodal Officer required"
+                    checked={isNodalOfficerRequired}
+                    onChange={(_event, { checked }) => {
+                      setIsNodalOfficerRequired(checked);
+                      if (!checked) {
+                        setGhatForm({
+                          ...ghatForm,
+                          nodalOfficerName: "",
+                          nodalOfficerContact: "",
+                        });
+                        setFieldErrors((current) => ({
+                          ...current,
+                          "ghat-nodal-name": "",
+                          "ghat-nodal-contact": "",
+                        }));
+                      }
+                    }}
+                  />
+                  {isNodalOfficerRequired && (
+                    <>
+                      <TextInput
+                        id="ghat-nodal-name"
+                        labelText="Nodal Officer"
+                        invalid={Boolean(fieldErrors["ghat-nodal-name"])}
+                        invalidText={fieldErrors["ghat-nodal-name"]}
+                        value={ghatForm.nodalOfficerName}
+                        onChange={(event) => {
+                          setGhatForm({
+                            ...ghatForm,
+                            nodalOfficerName: event.currentTarget.value,
+                          });
+                          setFieldErrors((current) => ({
+                            ...current,
+                            "ghat-nodal-name": "",
+                          }));
+                        }}
+                        maxLength={160}
+                      />
+                      <TextInput
+                        id="ghat-nodal-contact"
+                        labelText="Nodal Officer contact"
+                        invalid={Boolean(fieldErrors["ghat-nodal-contact"])}
+                        invalidText={fieldErrors["ghat-nodal-contact"]}
+                        value={ghatForm.nodalOfficerContact}
+                        onChange={(event) => {
+                          setGhatForm({
+                            ...ghatForm,
+                            nodalOfficerContact: event.currentTarget.value,
+                          });
+                          setFieldErrors((current) => ({
+                            ...current,
+                            "ghat-nodal-contact": "",
+                          }));
+                        }}
+                        maxLength={80}
+                      />
+                    </>
+                  )}
+                </div>
+                <div className="form-page__actions">
+                  <Button kind="secondary" type="button" onClick={closeForm}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? "Saving..." : "Save ghat"}
+                  </Button>
+                </div>
+              </form>
+            </Column>
+          </Grid>
+        </main>
+      )}
+
+      {isInspectionModalOpen && (
+        <main className="users-main form-page" id="main-content">
+          <Grid>
+            <Column sm={4} md={8} lg={14} className="form-page__column">
+              <div className="users-heading form-page__heading">
+                <div>
+                  <p className="dashboard-eyebrow">READINESS INSPECTION</p>
+                  <h1 className="dashboard-title">
+                    {editingInspection
+                      ? "Update inspection"
+                      : "Record inspection"}
+                  </h1>
+                  <p className="dashboard-description">
+                    Complete the festival details and readiness checklist.
+                  </p>
+                </div>
+                <Button
+                  kind="secondary"
+                  renderIcon={ArrowLeft}
+                  onClick={closeForm}
+                >
+                  Back to ghats
+                </Button>
+              </div>
+              {error && (
+                <InlineNotification
+                  kind="error"
+                  lowContrast
+                  title="Unable to save inspection"
+                  subtitle={error}
+                />
+              )}
+              <form
+                className="inspection-form form-page__surface"
+                onSubmit={(event) => void saveInspection(event)}
+              >
+                <p className="inspection-form__ghat">
+                  {selectedGhat?.name} · {selectedGhat?.district}
+                </p>
+                <div className="inspection-form__event-details">
+                  <Select
+                    id="inspection-occasion"
+                    labelText="Festival / occasion"
+                    value={occasion}
+                    invalid={Boolean(fieldErrors["inspection-occasion"])}
+                    invalidText={fieldErrors["inspection-occasion"]}
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
+                      setOccasion(isFestivalOccasion(value) ? value : "");
+                      setFieldErrors((current) => ({
+                        ...current,
+                        "inspection-occasion": "",
+                      }));
+                    }}
                   >
-                    <FileUploaderItem
-                      name={photo.name}
-                      status="edit"
-                      uuid={String(index)}
-                      iconDescription="Remove photo"
-                      onDelete={(_, { uuid }) => {
-                        setInspectionPhotos((current) =>
-                          current.filter(
-                            (_, photoIndex) => String(photoIndex) !== uuid,
-                          ),
+                    <SelectItem value="" text="Select a festival or occasion" />
+                    {FESTIVAL_OCCASIONS.map((festival) => (
+                      <SelectItem
+                        key={festival}
+                        value={festival}
+                        text={festival}
+                      />
+                    ))}
+                  </Select>
+                  <fieldset className="inspection-period">
+                    {/* <legend>Period for Festival / occasion</legend> */}
+                    <DatePicker
+                      datePickerType="range"
+                      dateFormat="m/d/Y"
+                      value={[periodStart, periodEnd]
+                        .map(inputValueToDate)
+                        .filter((date): date is Date => date !== undefined)}
+                      onChange={(dates) => {
+                        setPeriodStart(
+                          dates[0] ? dateToInputValue(dates[0]) : "",
                         );
+                        setPeriodEnd(
+                          dates[1] ? dateToInputValue(dates[1]) : "",
+                        );
+                        setFieldErrors((current) => ({
+                          ...current,
+                          "inspection-period-start": "",
+                          "inspection-period-end": "",
+                        }));
+                      }}
+                    >
+                      <DatePickerInput
+                        id="inspection-period-start"
+                        labelText="Period From"
+                        placeholder="mm/dd/yyyy"
+                        invalid={Boolean(
+                          fieldErrors["inspection-period-start"],
+                        )}
+                        invalidText={fieldErrors["inspection-period-start"]}
+                      />
+                      <DatePickerInput
+                        id="inspection-period-end"
+                        labelText="Period To"
+                        placeholder="mm/dd/yyyy"
+                        invalid={Boolean(fieldErrors["inspection-period-end"])}
+                        invalidText={fieldErrors["inspection-period-end"]}
+                      />
+                    </DatePicker>
+                  </fieldset>
+                </div>
+                <div className="inspection-form__event-details">
+                  <TextInput
+                    id="inspection-latitude"
+                    type="number"
+                    step="any"
+                    min="-90"
+                    max="90"
+                    labelText="Latitude"
+                    invalid={Boolean(fieldErrors["inspection-latitude"])}
+                    invalidText={fieldErrors["inspection-latitude"]}
+                    value={latitude}
+                    onChange={(event) => {
+                      setLatitude(event.currentTarget.value);
+                      setLocationError("");
+                      setFieldErrors((current) => ({
+                        ...current,
+                        "inspection-latitude": "",
+                      }));
+                    }}
+                  />
+                  <TextInput
+                    id="inspection-longitude"
+                    type="number"
+                    step="any"
+                    min="-180"
+                    max="180"
+                    labelText="Longitude"
+                    invalid={Boolean(fieldErrors["inspection-longitude"])}
+                    invalidText={fieldErrors["inspection-longitude"]}
+                    value={longitude}
+                    onChange={(event) => {
+                      setLongitude(event.currentTarget.value);
+                      setLocationError("");
+                      setFieldErrors((current) => ({
+                        ...current,
+                        "inspection-longitude": "",
+                      }));
+                    }}
+                  />
+                </div>
+                <div className="inspection-form__location">
+                  <Button
+                    kind="tertiary"
+                    size="sm"
+                    type="button"
+                    renderIcon={LocationCurrent}
+                    disabled={isGettingLocation || isSaving}
+                    onClick={useCurrentLocation}
+                  >
+                    {isGettingLocation
+                      ? "Getting location..."
+                      : "Use current location"}
+                  </Button>
+                  {isGettingLocation && (
+                    <p
+                      className="inspection-form__location-status"
+                      role="status"
+                    >
+                      Waiting for location permission and GPS...
+                    </p>
+                  )}
+                  {locationError && (
+                    <p className="cds--form-requirement" role="alert">
+                      {locationError}
+                    </p>
+                  )}
+                </div>
+                <div className="inspection-form__photos">
+                  <p className="cds--label">Inspection photos</p>
+                  <FileUploaderDropContainer
+                    id="inspection-photos"
+                    accept={["image/jpeg", "image/png", "image/webp"]}
+                    multiple
+                    labelText="Drag and drop photos here or click to upload"
+                    maxFileSize={2 * 1024 * 1024}
+                    disabled={
+                      (editingInspection?.photos.length ?? 0) -
+                        photosToRemove.length +
+                        inspectionPhotos.length >=
+                      2
+                    }
+                    aria-describedby={
+                      fieldErrors["inspection-photos"]
+                        ? "inspection-photos-help inspection-photos-error"
+                        : "inspection-photos-help"
+                    }
+                    onAddFiles={(_, { addedFiles }) => {
+                      const availableSlots =
+                        2 -
+                        ((editingInspection?.photos.length ?? 0) -
+                          photosToRemove.length) -
+                        inspectionPhotos.length;
+                      const validPhotos = addedFiles.filter(
+                        (photo) =>
+                          !photo.invalidFileType &&
+                          ["image/jpeg", "image/png", "image/webp"].includes(
+                            photo.type,
+                          ) &&
+                          photo.size <= 2 * 1024 * 1024,
+                      );
+                      if (
+                        validPhotos.length !== addedFiles.length ||
+                        addedFiles.length > availableSlots
+                      ) {
+                        setFieldErrors((current) => ({
+                          ...current,
+                          "inspection-photos":
+                            "Choose up to 2 JPEG, PNG, or WebP photos total, each no larger than 2 MB.",
+                        }));
+                      } else {
+                        setInspectionPhotos((current) => [
+                          ...current,
+                          ...validPhotos,
+                        ]);
                         setFieldErrors((current) => ({
                           ...current,
                           "inspection-photos": "",
                         }));
-                      }}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-            {fieldErrors["inspection-photos"] && (
-              <p
-                className="cds--form-requirement"
-                id="inspection-photos-error"
-                role="alert"
-              >
-                {fieldErrors["inspection-photos"]}
-              </p>
-            )}
-          </div>
-          <h3 className="inspection-form__section-title">
-            Readiness checklist
-          </h3>
-          <div className="inspection-checklist">
-            {INSPECTION_AREAS.map(({ key, label, detail }) => {
-              const area = inspectionForm[key];
-              return (
-                <section className="inspection-area" key={key}>
-                  <h4>{label}</h4>
-                  <p>{detail}</p>
-                  <Select
-                    id={`inspection-status-${key}`}
-                    labelText="Assessment"
-                    value={area.status}
-                    onChange={(event) =>
-                      setInspectionForm({
-                        ...inspectionForm,
-                        [key]: {
-                          ...area,
-                          status: event.currentTarget.value as ChecklistStatus,
-                        },
-                      })
-                    }
-                  >
-                    <SelectItem value="not_applicable" text="Not applicable" />
-                    <SelectItem value="deficiency" text="Pending" />
-                    <SelectItem value="compliant" text="Ready" />
-                  </Select>
-                  <TextArea
-                    id={`inspection-notes-${key}`}
-                    labelText={
-                      area.status === "deficiency"
-                        ? "Deficiency / findings"
-                        : "Arrangements made / notes"
-                    }
-                    invalid={Boolean(fieldErrors[`inspection-notes-${key}`])}
-                    invalidText={fieldErrors[`inspection-notes-${key}`]}
-                    value={area.notes}
-                    onChange={(event) => {
-                      setInspectionForm({
-                        ...inspectionForm,
-                        [key]: { ...area, notes: event.currentTarget.value },
-                      });
-                      setFieldErrors((current) => ({
-                        ...current,
-                        [`inspection-notes-${key}`]: "",
-                      }));
+                      }
                     }}
-                    rows={2}
-                    maxLength={area.status === "deficiency" ? 1000 : 2000}
                   />
-                  {area.status === "deficiency" && (
-                    <>
-                      <Checkbox
-                        id={`inspection-rectified-${key}`}
-                        labelText="This deficiency has been rectified"
-                        checked={area.isRectified}
-                        onChange={(_event, { checked }) =>
-                          setInspectionForm({
-                            ...inspectionForm,
-                            [key]: { ...area, isRectified: checked },
-                          })
-                        }
-                      />
-                      {area.isRectified && (
+                  <p
+                    className="inspection-photos__help"
+                    id="inspection-photos-help"
+                  >
+                    JPEG, PNG, or WebP. Up to 2 photos, 2 MB each.
+                  </p>
+                  {((editingInspection?.photos.length ?? 0) -
+                    photosToRemove.length >
+                    0 ||
+                    inspectionPhotos.length > 0) && (
+                    <ul
+                      className="inspection-photos__list"
+                      aria-label="Attached inspection photos"
+                    >
+                      {editingInspection?.photos
+                        .filter((photo) => !photosToRemove.includes(photo.id))
+                        .map((photo) => (
+                          <li
+                            className="inspection-photos__item"
+                            key={photo.id}
+                          >
+                            <FileUploaderItem
+                              name={photo.fileName}
+                              status="complete"
+                              iconDescription="Photo attached"
+                            />
+                            <Button
+                              kind="ghost"
+                              size="sm"
+                              onClick={() =>
+                                void viewInspectionPhoto(
+                                  editingInspection.id,
+                                  photo,
+                                )
+                              }
+                            >
+                              View
+                            </Button>
+                            <Button
+                              kind="danger--tertiary"
+                              size="sm"
+                              type="button"
+                              onClick={() =>
+                                setPhotosToRemove((current) => [
+                                  ...current,
+                                  photo.id,
+                                ])
+                              }
+                            >
+                              Remove
+                            </Button>
+                          </li>
+                        ))}
+                      {inspectionPhotos.map((photo, index) => (
+                        <li
+                          className="inspection-photos__item"
+                          key={`${photo.name}-${index}`}
+                        >
+                          <FileUploaderItem
+                            name={photo.name}
+                            status="edit"
+                            uuid={String(index)}
+                            iconDescription="Remove photo"
+                            onDelete={(_, { uuid }) => {
+                              setInspectionPhotos((current) =>
+                                current.filter(
+                                  (_, photoIndex) =>
+                                    String(photoIndex) !== uuid,
+                                ),
+                              );
+                              setFieldErrors((current) => ({
+                                ...current,
+                                "inspection-photos": "",
+                              }));
+                            }}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {fieldErrors["inspection-photos"] && (
+                    <p
+                      className="cds--form-requirement"
+                      id="inspection-photos-error"
+                      role="alert"
+                    >
+                      {fieldErrors["inspection-photos"]}
+                    </p>
+                  )}
+                </div>
+                <h3 className="inspection-form__section-title">
+                  Readiness checklist
+                </h3>
+                <div className="inspection-checklist">
+                  {INSPECTION_AREAS.map(({ key, label, detail }) => {
+                    const area = inspectionForm[key];
+                    return (
+                      <section className="inspection-area" key={key}>
+                        <h4>{label}</h4>
+                        <p>{detail}</p>
+                        <Select
+                          id={`inspection-status-${key}`}
+                          labelText="Assessment"
+                          value={area.status}
+                          onChange={(event) =>
+                            setInspectionForm({
+                              ...inspectionForm,
+                              [key]: {
+                                ...area,
+                                status: event.currentTarget
+                                  .value as ChecklistStatus,
+                              },
+                            })
+                          }
+                        >
+                          <SelectItem
+                            value="not_applicable"
+                            text="Not applicable"
+                          />
+                          <SelectItem value="deficiency" text="Pending" />
+                          <SelectItem value="compliant" text="Ready" />
+                        </Select>
                         <TextArea
-                          id={`inspection-action-${key}`}
-                          labelText="Action taken"
+                          id={`inspection-notes-${key}`}
+                          labelText={
+                            area.status === "deficiency"
+                              ? "Deficiency / findings"
+                              : "Arrangements made / notes"
+                          }
                           invalid={Boolean(
-                            fieldErrors[`inspection-action-${key}`],
+                            fieldErrors[`inspection-notes-${key}`],
                           )}
-                          invalidText={fieldErrors[`inspection-action-${key}`]}
-                          value={area.actionTaken}
+                          invalidText={fieldErrors[`inspection-notes-${key}`]}
+                          value={area.notes}
                           onChange={(event) => {
                             setInspectionForm({
                               ...inspectionForm,
                               [key]: {
                                 ...area,
-                                actionTaken: event.currentTarget.value,
+                                notes: event.currentTarget.value,
                               },
                             });
                             setFieldErrors((current) => ({
                               ...current,
-                              [`inspection-action-${key}`]: "",
+                              [`inspection-notes-${key}`]: "",
                             }));
                           }}
                           rows={2}
-                          maxLength={2000}
+                          maxLength={area.status === "deficiency" ? 1000 : 2000}
                         />
-                      )}
-                    </>
-                  )}
-                </section>
-              );
-            })}
-          </div>
-        </form>
-      </Modal>
+                        {area.status === "deficiency" && (
+                          <>
+                            <Checkbox
+                              id={`inspection-rectified-${key}`}
+                              labelText="This deficiency has been rectified"
+                              checked={area.isRectified}
+                              onChange={(_event, { checked }) =>
+                                setInspectionForm({
+                                  ...inspectionForm,
+                                  [key]: { ...area, isRectified: checked },
+                                })
+                              }
+                            />
+                            {area.isRectified && (
+                              <TextArea
+                                id={`inspection-action-${key}`}
+                                labelText="Action taken"
+                                invalid={Boolean(
+                                  fieldErrors[`inspection-action-${key}`],
+                                )}
+                                invalidText={
+                                  fieldErrors[`inspection-action-${key}`]
+                                }
+                                value={area.actionTaken}
+                                onChange={(event) => {
+                                  setInspectionForm({
+                                    ...inspectionForm,
+                                    [key]: {
+                                      ...area,
+                                      actionTaken: event.currentTarget.value,
+                                    },
+                                  });
+                                  setFieldErrors((current) => ({
+                                    ...current,
+                                    [`inspection-action-${key}`]: "",
+                                  }));
+                                }}
+                                rows={2}
+                                maxLength={2000}
+                              />
+                            )}
+                          </>
+                        )}
+                      </section>
+                    );
+                  })}
+                </div>
+                <div className="form-page__actions">
+                  <Button kind="secondary" type="button" onClick={closeForm}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? "Saving..." : "Save inspection"}
+                  </Button>
+                </div>
+              </form>
+            </Column>
+          </Grid>
+        </main>
+      )}
 
       <Modal
         open={ghatToDelete !== null}

@@ -29,13 +29,7 @@ import { useRouter } from "next/navigation";
 import { SuccessToast } from "@/components/success-toast";
 import { getApiUrl } from "@/lib/api-url";
 import { validateTextFields } from "@/lib/field-validation";
-import {
-  type FormEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 
 const IS_DEMO_LOGIN =
   process.env.NODE_ENV === "development" &&
@@ -109,25 +103,23 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [userSearch, setUserSearch] = useState("");
-  const formRef = useRef<HTMLFormElement>(null);
   const normalizedUserSearch = userSearch.trim().toLocaleLowerCase();
-  const filteredUsers = (normalizedUserSearch
-    ? users.filter((user) =>
-        [user.name, user.username, user.role]
-          .some((value) =>
+  const filteredUsers = (
+    normalizedUserSearch
+      ? users.filter((user) =>
+          [user.name, user.username, user.role].some((value) =>
             value.toLocaleLowerCase().includes(normalizedUserSearch),
           ),
-      )
-    : users
-  ).slice().sort(
-    (first, second) =>
-      Date.parse(second.updatedAt ?? second.createdAt) -
-      Date.parse(first.updatedAt ?? first.createdAt),
-  );
-  const pageCount = Math.max(
-    1,
-    Math.ceil(filteredUsers.length / pageSize),
-  );
+        )
+      : users
+  )
+    .slice()
+    .sort(
+      (first, second) =>
+        Date.parse(second.updatedAt ?? second.createdAt) -
+        Date.parse(first.updatedAt ?? first.createdAt),
+    );
+  const pageCount = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const visibleUsers = filteredUsers.slice(
     (currentPage - 1) * pageSize,
@@ -211,6 +203,43 @@ export default function UsersPage() {
     void Promise.resolve().then(loadUsers);
   }, [loadUsers]);
 
+  useEffect(() => {
+    function syncFormWithLocation() {
+      if (isLoading) return;
+      const params = new URLSearchParams(window.location.search);
+      const form = params.get("form");
+      if (form === "create") {
+        setEditingUser(null);
+        setUsername("");
+        setName("");
+        setPassword("");
+        setRole("user");
+        setFieldErrors({});
+        setError("");
+        setIsFormOpen(true);
+      } else if (form === "edit") {
+        const user = users.find((item) => item.id === params.get("id"));
+        if (user) {
+          setEditingUser(user);
+          setUsername(user.username);
+          setName(user.name);
+          setPassword("");
+          setRole(user.role);
+          setFieldErrors({});
+          setError("");
+          setIsFormOpen(true);
+        }
+      } else {
+        setIsFormOpen(false);
+        setEditingUser(null);
+      }
+    }
+
+    syncFormWithLocation();
+    window.addEventListener("popstate", syncFormWithLocation);
+    return () => window.removeEventListener("popstate", syncFormWithLocation);
+  }, [isLoading, users]);
+
   function openCreateForm() {
     setEditingUser(null);
     setUsername("");
@@ -220,6 +249,7 @@ export default function UsersPage() {
     setError("");
     setNotice("");
     setFieldErrors({});
+    window.history.pushState(null, "", "/users?form=create");
     setIsFormOpen(true);
   }
 
@@ -232,7 +262,18 @@ export default function UsersPage() {
     setError("");
     setNotice("");
     setFieldErrors({});
+    window.history.pushState(
+      null,
+      "",
+      `/users?form=edit&id=${encodeURIComponent(user.id)}`,
+    );
     setIsFormOpen(true);
+  }
+
+  function closeForm() {
+    window.history.replaceState(null, "", "/users");
+    setIsFormOpen(false);
+    setEditingUser(null);
   }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -347,6 +388,7 @@ export default function UsersPage() {
         }
       }
 
+      window.history.replaceState(null, "", "/users");
       setNotice(editingUser ? "User updated." : "User added.");
       setIsFormOpen(false);
       setEditingUser(null);
@@ -383,10 +425,13 @@ export default function UsersPage() {
         localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(updatedUsers));
         setUsers(updatedUsers);
       } else {
-        const response = await fetch(`${getApiUrl()}/users/${userToDelete.id}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
+        const response = await fetch(
+          `${getApiUrl()}/users/${userToDelete.id}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          },
+        );
         if (response.status === 401) {
           router.replace("/login");
           return;
@@ -485,236 +530,278 @@ export default function UsersPage() {
         <SuccessToast message={notice} onClose={() => setNotice("")} />
       )}
 
-      <main className="users-main" id="main-content">
-        <Grid>
-          <Column sm={4} md={8} lg={16}>
-            <div className="users-heading">
-              <div>
-                <p className="dashboard-eyebrow">ADMINISTRATION</p>
-                <h1 className="dashboard-title">Users</h1>
-                <p className="dashboard-description">
-                  Add, edit, and remove accounts for your workspace.
-                </p>
-              </div>
-            </div>
-
-            {isDemoSession && (
-              <InlineNotification
-                kind="info"
-                lowContrast
-                hideCloseButton
-                title="Development demo"
-                subtitle="Users created here are saved only in this browser. Sign in with an API account to manage PostgreSQL users."
-              />
-            )}
-            {error && !isFormOpen && (
-              <InlineNotification
-                kind="error"
-                lowContrast
-                title="User management error"
-                subtitle={error}
-              />
-            )}
-          </Column>
-
-          <Column sm={4} md={8} lg={16}>
-            <Tile className="users-table-tile">
-              {isLoading ? (
-                <p role="status">Loading users...</p>
-              ) : users.length === 0 ? (
-                <div className="users-empty">
-                  <h2>No users yet</h2>
-                  <p>Add a user to get started.</p>
-                  <Button kind="tertiary" renderIcon={Add} onClick={openCreateForm}>
-                    Add user
-                  </Button>
+      {!isFormOpen && (
+        <main className="users-main" id="main-content">
+          <Grid>
+            <Column sm={4} md={8} lg={16}>
+              <div className="users-heading">
+                <div>
+                  <p className="dashboard-eyebrow">ADMINISTRATION</p>
+                  <h1 className="dashboard-title">Users</h1>
+                  <p className="dashboard-description">
+                    Add, edit, and remove accounts for your workspace.
+                  </p>
                 </div>
-              ) : (
-                <div className="users-table-wrapper">
-                  <div className="users-table-toolbar">
-                    <Search
-                      className="table-search"
-                      id="users-search"
-                      labelText="Search users"
-                      placeholder="Search by name, username, or role..."
-                      size="lg"
-                      value={userSearch}
-                      onChange={(event) => {
-                        setUserSearch(event.currentTarget.value);
-                        setPage(1);
-                      }}
-                      onClear={() => {
-                        setUserSearch("");
-                        setPage(1);
-                      }}
-                    />
-                    <Button renderIcon={Add} onClick={openCreateForm}>
+              </div>
+
+              {isDemoSession && (
+                <InlineNotification
+                  kind="info"
+                  lowContrast
+                  hideCloseButton
+                  title="Development demo"
+                  subtitle="Users created here are saved only in this browser. Sign in with an API account to manage PostgreSQL users."
+                />
+              )}
+              {error && !isFormOpen && (
+                <InlineNotification
+                  kind="error"
+                  lowContrast
+                  title="User management error"
+                  subtitle={error}
+                />
+              )}
+            </Column>
+
+            <Column sm={4} md={8} lg={16}>
+              <Tile className="users-table-tile">
+                {isLoading ? (
+                  <p role="status">Loading users...</p>
+                ) : users.length === 0 ? (
+                  <div className="users-empty">
+                    <h2>No users yet</h2>
+                    <p>Add a user to get started.</p>
+                    <Button
+                      kind="tertiary"
+                      renderIcon={Add}
+                      onClick={openCreateForm}
+                    >
                       Add user
                     </Button>
                   </div>
-                  {filteredUsers.length === 0 ? (
-                    <div className="users-empty">
-                      <h2>No users match your search</h2>
-                      <p>Try a different name, username, or role.</p>
+                ) : (
+                  <div className="users-table-wrapper">
+                    <div className="users-table-toolbar">
+                      <Search
+                        className="table-search"
+                        id="users-search"
+                        labelText="Search users"
+                        placeholder="Search by name, username, or role..."
+                        size="lg"
+                        value={userSearch}
+                        onChange={(event) => {
+                          setUserSearch(event.currentTarget.value);
+                          setPage(1);
+                        }}
+                        onClear={() => {
+                          setUserSearch("");
+                          setPage(1);
+                        }}
+                      />
+                      <Button renderIcon={Add} onClick={openCreateForm}>
+                        Add user
+                      </Button>
                     </div>
-                  ) : (
-                    <>
-                  <table className="cds--data-table cds--data-table--zebra users-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Username</th>
-                        <th scope="col">Role</th>
-                        <th scope="col">Created</th>
-                        <th scope="col">
-                          <span className="visually-hidden">Actions</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visibleUsers.map((user) => (
-                        <tr key={user.id}>
-                          <td>
-                            <strong>{user.name}</strong>
-                            {user.id === currentUserId && (
-                              <span className="users-table__you">You</span>
-                            )}
-                          </td>
-                          <td>{user.username}</td>
-                          <td>
-                            {user.role === "admin" ? "Administrator" : "User"}
-                          </td>
-                          <td>
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="users-table__actions">
-                            <OverflowMenu
-                              aria-label={`Actions for ${user.username}`}
-                              iconDescription={`Actions for ${user.username}`}
-                              size="sm"
-                            >
-                              <OverflowMenuItem
-                                itemText="Edit"
-                                onClick={() => openEditForm(user)}
-                              />
-                              <OverflowMenuItem
-                                itemText="Delete"
-                                isDelete
-                                hasDivider
-                                disabled={user.id === currentUserId}
-                                onClick={() => setUserToDelete(user)}
-                              />
-                            </OverflowMenu>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <Pagination
-                    id="users-pagination"
-                    page={currentPage}
-                    pageSize={pageSize}
-                    pageSizes={[10, 20, 50]}
-                    totalItems={filteredUsers.length}
-                    onChange={({ page: nextPage, pageSize: nextPageSize }) => {
-                      setPage(nextPage);
-                      setPageSize(nextPageSize);
-                    }}
-                  />
-                    </>
-                  )}
-                </div>
-              )}
-            </Tile>
-          </Column>
-        </Grid>
-      </main>
+                    {filteredUsers.length === 0 ? (
+                      <div className="users-empty">
+                        <h2>No users match your search</h2>
+                        <p>Try a different name, username, or role.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <table className="cds--data-table cds--data-table--zebra users-table">
+                          <thead>
+                            <tr>
+                              <th scope="col">Name</th>
+                              <th scope="col">Username</th>
+                              <th scope="col">Role</th>
+                              <th scope="col">Created</th>
+                              <th scope="col">
+                                <span className="visually-hidden">Actions</span>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {visibleUsers.map((user) => (
+                              <tr key={user.id}>
+                                <td>
+                                  <strong>{user.name}</strong>
+                                  {user.id === currentUserId && (
+                                    <span className="users-table__you">
+                                      You
+                                    </span>
+                                  )}
+                                </td>
+                                <td>{user.username}</td>
+                                <td>
+                                  {user.role === "admin"
+                                    ? "Administrator"
+                                    : "User"}
+                                </td>
+                                <td>
+                                  {new Date(
+                                    user.createdAt,
+                                  ).toLocaleDateString()}
+                                </td>
+                                <td className="users-table__actions">
+                                  <OverflowMenu
+                                    aria-label={`Actions for ${user.username}`}
+                                    iconDescription={`Actions for ${user.username}`}
+                                    size="sm"
+                                  >
+                                    <OverflowMenuItem
+                                      itemText="Edit"
+                                      onClick={() => openEditForm(user)}
+                                    />
+                                    <OverflowMenuItem
+                                      itemText="Delete"
+                                      isDelete
+                                      hasDivider
+                                      disabled={user.id === currentUserId}
+                                      onClick={() => setUserToDelete(user)}
+                                    />
+                                  </OverflowMenu>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <Pagination
+                          id="users-pagination"
+                          page={currentPage}
+                          pageSize={pageSize}
+                          pageSizes={[10, 20, 50]}
+                          totalItems={filteredUsers.length}
+                          onChange={({
+                            page: nextPage,
+                            pageSize: nextPageSize,
+                          }) => {
+                            setPage(nextPage);
+                            setPageSize(nextPageSize);
+                          }}
+                        />
+                      </>
+                    )}
+                  </div>
+                )}
+              </Tile>
+            </Column>
+          </Grid>
+        </main>
+      )}
 
-      <Modal
-        open={isFormOpen}
-        modalHeading={editingUser ? "Edit user" : "Add user"}
-        primaryButtonText={
-          isSaving
-            ? "Saving..."
-            : editingUser
-              ? "Save changes"
-              : "Create user"
-        }
-        secondaryButtonText="Cancel"
-        primaryButtonDisabled={isSaving}
-        onRequestClose={() => setIsFormOpen(false)}
-        onRequestSubmit={() => formRef.current?.requestSubmit()}
-      >
-        {error && (
-          <InlineNotification
-            kind="error"
-            lowContrast
-            title="Unable to save user"
-            subtitle={error}
-          />
-        )}
-        <form
-          ref={formRef}
-          className="users-form"
-          onSubmit={(event) => void handleSave(event)}
-        >
-          <TextInput
-            id="user-username"
-            labelText="Username"
-            helperText="Must be unique. Usernames are case-insensitive."
-            invalid={Boolean(fieldErrors.username)}
-            invalidText={fieldErrors.username}
-            value={username}
-            onChange={(event) => {
-              setUsername(event.currentTarget.value);
-              setFieldErrors((current) => ({ ...current, username: "" }));
-            }}
-            maxLength={64}
-          />
-          <TextInput
-            id="user-name"
-            labelText="Name"
-            invalid={Boolean(fieldErrors.name)}
-            invalidText={fieldErrors.name}
-            value={name}
-            onChange={(event) => {
-              setName(event.currentTarget.value);
-              setFieldErrors((current) => ({ ...current, name: "" }));
-            }}
-            maxLength={120}
-          />
-          <Select
-            id="user-role"
-            labelText="Role"
-            value={role}
-            onChange={(event) =>
-              setRole(event.currentTarget.value === "admin" ? "admin" : "user")
-            }
-          >
-            <SelectItem value="admin" text="Administrator" />
-            <SelectItem value="user" text="User" />
-          </Select>
-          <PasswordInput
-            id="user-password"
-            labelText={editingUser ? "New password (optional)" : "Password"}
-            helperText={
-              editingUser
-                ? "Leave blank to keep the current password."
-                : "At least 8 characters."
-            }
-            invalid={Boolean(fieldErrors.password)}
-            invalidText={fieldErrors.password}
-            autoComplete="new-password"
-            value={password}
-            onChange={(event) => {
-              setPassword(event.currentTarget.value);
-              setFieldErrors((current) => ({ ...current, password: "" }));
-            }}
-            minLength={8}
-            maxLength={72}
-          />
-        </form>
-      </Modal>
+      {isFormOpen && (
+        <main className="users-main form-page" id="main-content">
+          <Grid>
+            <Column sm={4} md={8} lg={10} className="form-page__column">
+              <div className="users-heading form-page__heading">
+                <div>
+                  <p className="dashboard-eyebrow">ADMINISTRATION</p>
+                  <h1 className="dashboard-title">
+                    {editingUser ? "Edit user" : "Add user"}
+                  </h1>
+                  <p className="dashboard-description">
+                    {editingUser
+                      ? "Update this account's details and access."
+                      : "Create an account for your workspace."}
+                  </p>
+                </div>
+                <Button
+                  kind="secondary"
+                  renderIcon={ArrowLeft}
+                  onClick={closeForm}
+                >
+                  Back to users
+                </Button>
+              </div>
+              {error && (
+                <InlineNotification
+                  kind="error"
+                  lowContrast
+                  title="Unable to save user"
+                  subtitle={error}
+                />
+              )}
+              <form
+                className="users-form form-page__surface"
+                onSubmit={(event) => void handleSave(event)}
+              >
+                <TextInput
+                  id="user-username"
+                  labelText="Username"
+                  helperText="Must be unique. Usernames are case-insensitive."
+                  invalid={Boolean(fieldErrors.username)}
+                  invalidText={fieldErrors.username}
+                  value={username}
+                  onChange={(event) => {
+                    setUsername(event.currentTarget.value);
+                    setFieldErrors((current) => ({ ...current, username: "" }));
+                  }}
+                  maxLength={64}
+                />
+                <TextInput
+                  id="user-name"
+                  labelText="Name"
+                  invalid={Boolean(fieldErrors.name)}
+                  invalidText={fieldErrors.name}
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.currentTarget.value);
+                    setFieldErrors((current) => ({ ...current, name: "" }));
+                  }}
+                  maxLength={120}
+                />
+                <Select
+                  id="user-role"
+                  labelText="Role"
+                  value={role}
+                  onChange={(event) =>
+                    setRole(
+                      event.currentTarget.value === "admin" ? "admin" : "user",
+                    )
+                  }
+                >
+                  <SelectItem value="admin" text="Administrator" />
+                  <SelectItem value="user" text="User" />
+                </Select>
+                <PasswordInput
+                  id="user-password"
+                  labelText={
+                    editingUser ? "New password (optional)" : "Password"
+                  }
+                  helperText={
+                    editingUser
+                      ? "Leave blank to keep the current password."
+                      : "At least 8 characters."
+                  }
+                  invalid={Boolean(fieldErrors.password)}
+                  invalidText={fieldErrors.password}
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.currentTarget.value);
+                    setFieldErrors((current) => ({ ...current, password: "" }));
+                  }}
+                  minLength={8}
+                  maxLength={72}
+                />
+                <div className="form-page__actions">
+                  <Button kind="secondary" type="button" onClick={closeForm}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving
+                      ? "Saving..."
+                      : editingUser
+                        ? "Save changes"
+                        : "Create user"}
+                  </Button>
+                </div>
+              </form>
+            </Column>
+          </Grid>
+        </main>
+      )}
 
       <Modal
         open={userToDelete !== null}
@@ -727,9 +814,8 @@ export default function UsersPage() {
         onRequestSubmit={() => void handleDelete()}
       >
         <p>
-          This permanently deletes{" "}
-          <strong>{userToDelete?.username}</strong> and prevents them from signing
-          in.
+          This permanently deletes <strong>{userToDelete?.username}</strong> and
+          prevents them from signing in.
         </p>
       </Modal>
     </>
