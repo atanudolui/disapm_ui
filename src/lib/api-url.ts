@@ -3,7 +3,7 @@ const FRONTEND_API_URLS = new Map([
     "https://disapm-prod.up.railway.app",
     "https://disapm-api-prod.up.railway.app",
   ],
-  ["https://disapm.in", "https://api.disapm.in"],
+  ["https://www.disapm.in", "https://api.disapm.in"],
   ["https://stage.disapm.in", "https://stage-api.disapm.in"],
   [
     "https://disapm-stage.up.railway.app",
