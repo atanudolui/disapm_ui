@@ -50,6 +50,7 @@ const BLOCKS = [
   "Egra-I",
   "Egra-II",
   "Egra Municipiality",
+  "Haldia",
   "Haldia Municipiality",
   "Khejuri-I",
   "Khejuri-II",
