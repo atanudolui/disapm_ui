@@ -1,22 +1,19 @@
 "use client";
 
 import {
-  ArrowLeft,
   RainDrop,
   Report,
-  UserMultiple,
 } from "@carbon/icons-react";
 import {
   Button,
   Column,
   Grid,
-  Header,
-  HeaderName,
   InlineNotification,
   Tag,
   Tile,
 } from "@carbon/react";
 import { useRouter } from "next/navigation";
+import { AppHeader } from "@/components/app-header";
 import { getApiUrl } from "@/lib/api-url";
 import { useEffect, useState } from "react";
 
@@ -138,40 +135,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Header
-        className="app-shell-header"
-        aria-label="Puja Readiness Portal dashboard"
-      >
-        <HeaderName href="/dashboard" prefix="">
-          Puja Readiness Portal
-        </HeaderName>
-        <nav className="app-header__nav" aria-label="Main navigation">
-          <Button kind="ghost" href="/dashboard" aria-current="page">
-            Dashboard
-          </Button>
-          <Button kind="ghost" href="/ghats" renderIcon={RainDrop}>
-            Ghats
-          </Button>
-          <Button kind="ghost" href="/reports" renderIcon={Report}>
-            Action Taken Report
-          </Button>
-          {user?.role === "admin" && (
-            <Button kind="ghost" href="/users" renderIcon={UserMultiple}>
-              Users
-            </Button>
-          )}
-        </nav>
-        <div className="app-header__actions">
-          {user && (
-            <span className="app-header__user" title={user.username}>
-              {user.name}
-            </span>
-          )}
-          <Button kind="ghost" renderIcon={ArrowLeft} onClick={handleLogout}>
-            Sign out
-          </Button>
-        </div>
-      </Header>
+      <AppHeader user={user} onSignOut={handleLogout} />
 
       <main className="dashboard-main" id="main-content">
         <Grid>

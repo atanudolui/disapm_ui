@@ -3,16 +3,11 @@
 import {
   Add,
   ArrowLeft,
-  Report,
-  UserMultiple,
-  RainDrop,
 } from "@carbon/icons-react";
 import {
   Button,
   Column,
   Grid,
-  Header,
-  HeaderName,
   InlineNotification,
   Modal,
   OverflowMenu,
@@ -26,6 +21,7 @@ import {
   Tile,
 } from "@carbon/react";
 import { useRouter } from "next/navigation";
+import { AppHeader } from "@/components/app-header";
 import { SuccessToast } from "@/components/success-toast";
 import { getApiUrl } from "@/lib/api-url";
 import { validateTextFields } from "@/lib/field-validation";
@@ -488,43 +484,14 @@ export default function UsersPage() {
 
   return (
     <>
-      <Header
-        className="app-shell-header"
-        aria-label="Puja Readiness Portal users"
-      >
-        <HeaderName href="/dashboard" prefix="">
-          Puja Readiness Portal
-        </HeaderName>
-        <nav className="app-header__nav" aria-label="Main navigation">
-          <Button kind="ghost" href="/dashboard">
-            Dashboard
-          </Button>
-          <Button kind="ghost" href="/ghats" renderIcon={RainDrop}>
-            Ghats
-          </Button>
-          <Button kind="ghost" href="/reports" renderIcon={Report}>
-            Action Taken Report
-          </Button>
-          <Button
-            kind="ghost"
-            href="/users"
-            renderIcon={UserMultiple}
-            aria-current="page"
-          >
-            Users
-          </Button>
-        </nav>
-        <div className="app-header__actions">
-          {currentUserName && (
-            <span className="app-header__user" title={currentUserName}>
-              {currentUserName}
-            </span>
-          )}
-          <Button kind="ghost" renderIcon={ArrowLeft} onClick={handleLogout}>
-            Sign out
-          </Button>
-        </div>
-      </Header>
+      <AppHeader
+        user={
+          currentUserName
+            ? { name: currentUserName, role: "admin" }
+            : null
+        }
+        onSignOut={handleLogout}
+      />
 
       {notice && (
         <SuccessToast message={notice} onClose={() => setNotice("")} />

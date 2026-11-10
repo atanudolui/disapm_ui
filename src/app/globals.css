@@ -313,6 +313,12 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.change-password-form {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 32rem;
+}
+
 .login-form__submit {
   width: 100%;
   max-width: none;

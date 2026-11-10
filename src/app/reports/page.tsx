@@ -1,14 +1,12 @@
 "use client";
 
-import { ArrowLeft, Download, UserMultiple } from "@carbon/icons-react";
+import { Download } from "@carbon/icons-react";
 import {
   Accordion,
   AccordionItem,
   Button,
   Column,
   Grid,
-  Header,
-  HeaderName,
   InlineNotification,
   Pagination,
   Search,
@@ -16,6 +14,7 @@ import {
   Tile,
 } from "@carbon/react";
 import { useRouter } from "next/navigation";
+import { AppHeader } from "@/components/app-header";
 import { getApiUrl } from "@/lib/api-url";
 import { Fragment, useCallback, useEffect, useState } from "react";
 
@@ -390,37 +389,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <Header className="app-shell-header" aria-label="Puja Readiness Portal">
-        <HeaderName href="/dashboard" prefix="">
-          Puja Readiness Portal
-        </HeaderName>
-        <nav className="app-header__nav" aria-label="Main navigation">
-          <Button kind="ghost" href="/dashboard">
-            Dashboard
-          </Button>
-          <Button kind="ghost" href="/ghats">
-            Ghats
-          </Button>
-          <Button kind="ghost" href="/reports" aria-current="page">
-            Action Taken Report
-          </Button>
-          {profile?.role === "admin" && (
-            <Button kind="ghost" href="/users" renderIcon={UserMultiple}>
-              Users
-            </Button>
-          )}
-        </nav>
-        <div className="app-header__actions">
-          {profile && (
-            <span className="app-header__user" title={profile.username}>
-              {profile.name}
-            </span>
-          )}
-          <Button kind="ghost" renderIcon={ArrowLeft} onClick={handleLogout}>
-            Sign out
-          </Button>
-        </div>
-      </Header>
+      <AppHeader user={profile} onSignOut={handleLogout} />
 
       <main className="report-main" id="main-content">
         <Grid>

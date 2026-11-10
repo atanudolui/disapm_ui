@@ -4,8 +4,6 @@ import {
   Add,
   ArrowLeft,
   LocationCurrent,
-  Report,
-  UserMultiple,
 } from "@carbon/icons-react";
 import {
   Button,
@@ -16,8 +14,6 @@ import {
   FileUploaderDropContainer,
   FileUploaderItem,
   Grid,
-  Header,
-  HeaderName,
   InlineNotification,
   Modal,
   OverflowMenu,
@@ -32,6 +28,7 @@ import {
   Tile,
 } from "@carbon/react";
 import { useRouter } from "next/navigation";
+import { AppHeader } from "@/components/app-header";
 import { SuccessToast } from "@/components/success-toast";
 import { getApiUrl } from "@/lib/api-url";
 import { validateTextFields } from "@/lib/field-validation";
@@ -928,37 +925,7 @@ export default function GhatsPage() {
 
   return (
     <>
-      <Header className="app-shell-header" aria-label="Puja Readiness Portal">
-        <HeaderName href="/dashboard" prefix="">
-          Puja Readiness Portal
-        </HeaderName>
-        <nav className="app-header__nav" aria-label="Main navigation">
-          <Button kind="ghost" href="/dashboard">
-            Dashboard
-          </Button>
-          <Button kind="ghost" href="/ghats" aria-current="page">
-            Ghats
-          </Button>
-          <Button kind="ghost" href="/reports" renderIcon={Report}>
-            Action Taken Report
-          </Button>
-          {profile?.role === "admin" && (
-            <Button kind="ghost" href="/users" renderIcon={UserMultiple}>
-              Users
-            </Button>
-          )}
-        </nav>
-        <div className="app-header__actions">
-          {profile && (
-            <span className="app-header__user" title={profile.username}>
-              {profile.name}
-            </span>
-          )}
-          <Button kind="ghost" renderIcon={ArrowLeft} onClick={handleLogout}>
-            Sign out
-          </Button>
-        </div>
-      </Header>
+      <AppHeader user={profile} onSignOut={handleLogout} />
 
       {notice && (
         <SuccessToast message={notice} onClose={() => setNotice("")} />
