@@ -1634,7 +1634,6 @@ body {
     font-size: 0.75rem;
   }
 
-  .dashboard-main,
   .users-main {
     padding-top: 10rem;
   }
@@ -1666,7 +1665,7 @@ body {
   }
 
   .dashboard-main {
-    padding: 10rem 0 4rem;
+    padding: 13rem 0 4rem;
   }
 
   .users-main {
