@@ -400,7 +400,7 @@ export default function ReportsPage() {
             <div className="report-heading">
               <div>
                 <p className="dashboard-eyebrow">
-                  GOVERNMENT OF WEST BENGAL · FIELD COMPLIANCE
+                  District Magistrate Purba Medinipur · FIELD COMPLIANCE
                 </p>
                 <h1 className="dashboard-title">Action Taken Report</h1>
               </div>
@@ -442,7 +442,7 @@ export default function ReportsPage() {
                       REPORTING AUTHORITY
                     </p>
                     <p className="report-overview__order">
-                      Government of West Bengal
+                      District Magistrate Purba Medinipur
                     </p>
                     <p className="report-overview__generated">
                       Generated {new Date(report.generatedAt).toLocaleString()}

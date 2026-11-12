@@ -177,7 +177,7 @@ export default function DashboardPage() {
                     FIELD OPERATIONS · PURBA MEDINIPUR
                   </p>
                   <h1 className="dashboard-title">
-                    Welcome to Puja Readiness Portal
+                    Welcome to Purba Medinipur Puja Readiness Portal
                   </h1>
                   <p className="dashboard-description">
                     Your readiness overview for Purba Medinipur. Signed in as{" "}
