@@ -166,13 +166,18 @@ export default function DashboardPage() {
                     subtitle={error}
                   />
                 )}
-                <p className="dashboard-eyebrow"></p>
-                <h1 className="dashboard-title">
-                  Welcome to Purba Medinipur Puja Readiness Portal
-                </h1>
-                <p className="dashboard-description">
-                  Signed in as {user.name} (@{user.username}). Your workspace is ready.
-                </p>
+                <section className="dashboard-hero">
+                  <p className="dashboard-eyebrow">
+                    FIELD OPERATIONS · PURBA MEDINIPUR
+                  </p>
+                  <h1 className="dashboard-title">
+                    Welcome to Puja Readiness Portal
+                  </h1>
+                  <p className="dashboard-description">
+                    Your readiness overview for Purba Medinipur. Signed in as{" "}
+                    <strong>{user.name}</strong> (@{user.username}).
+                  </p>
+                </section>
                 {isDemoSession && (
                   <InlineNotification
                     kind="info"
@@ -225,7 +230,16 @@ export default function DashboardPage() {
                 </Column>
               ))}
               <Column sm={4} md={8} lg={16}>
-                <h2 className="dashboard-section-title">Readiness workflow</h2>
+                <div className="dashboard-section-heading">
+                  <div>
+                    <p className="dashboard-section-heading__eyebrow">
+                      NEXT STEPS
+                    </p>
+                    <h2 className="dashboard-section-title">
+                      Readiness workflow
+                    </h2>
+                  </div>
+                </div>
                 <Tile className="dashboard-activity">
                   {[
                     {
