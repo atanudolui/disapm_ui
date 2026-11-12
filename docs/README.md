@@ -3,6 +3,35 @@
 This guide explains how to use the Puja Readiness Portal to maintain the ghat
 register, record readiness inspections, and review outstanding actions.
 
+## User workflow
+
+```mermaid
+flowchart TD
+    A[Open portal] --> B[Enter username and password]
+    B --> C{Sign-in successful?}
+    C -- No --> B
+    C -- Yes --> D[Dashboard]
+    D --> E{Choose a task}
+    E --> F[Manage ghats]
+    F --> G[Add or edit ghat details]
+    G --> H[Record or update inspection]
+    H --> I[Assess readiness areas]
+    I --> J{Any pending items?}
+    J -- Yes --> K[Describe deficiencies]
+    J -- No --> L[Save inspection]
+    K --> L
+    L --> M[Review Action Taken Report]
+    M --> N[Search or download CSV]
+    E --> O[Change password]
+    E --> P{Administrator?}
+    P -- Yes --> Q[Manage user accounts]
+    P -- No --> R[Users section unavailable]
+    N --> S[Sign out]
+    O --> S
+    Q --> S
+    R --> S
+```
+
 ## Sign in
 
 1. Open the portal in your browser. The home page takes you to the sign-in
