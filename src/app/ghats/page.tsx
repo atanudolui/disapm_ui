@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { SuccessToast } from "@/components/success-toast";
 import { getApiUrl } from "@/lib/api-url";
+import { fetchGet } from "@/lib/fetch-get";
 import { validateTextFields } from "@/lib/field-validation";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 
@@ -359,7 +360,7 @@ export default function GhatsPage() {
     setError("");
     setIsLoading(true);
     try {
-      const profileResponse = await fetch(`${getApiUrl()}/auth/me`, {
+      const profileResponse = await fetchGet(`${getApiUrl()}/auth/me`, {
         credentials: "include",
       });
       if (profileResponse.status === 401) {
@@ -370,7 +371,7 @@ export default function GhatsPage() {
         throw new Error("Unable to load your profile.");
       }
       const loadedProfile: UserProfile = await profileResponse.json();
-      const ghatsResponse = await fetch(`${getApiUrl()}/ghats`, {
+      const ghatsResponse = await fetchGet(`${getApiUrl()}/ghats`, {
         credentials: "include",
       });
       if (ghatsResponse.status === 401) {
@@ -880,7 +881,7 @@ export default function GhatsPage() {
     }
 
     try {
-      const response = await fetch(
+      const response = await fetchGet(
         `${getApiUrl()}/inspections/${inspectionId}/photos/${photo.id}`,
         { credentials: "include" },
       );

@@ -14,9 +14,11 @@ import {
   Tag,
   Tile,
 } from "@carbon/react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { getApiUrl } from "@/lib/api-url";
+import { fetchGet } from "@/lib/fetch-get";
 import { Fragment, useCallback, useEffect, useState } from "react";
 
 type AreaKey =
@@ -335,7 +337,7 @@ export default function ReportsPage() {
     setError("");
     setIsLoading(true);
     try {
-      const profileResponse = await fetch(`${getApiUrl()}/auth/me`, {
+      const profileResponse = await fetchGet(`${getApiUrl()}/auth/me`, {
         credentials: "include",
       });
       if (profileResponse.status === 401) {
@@ -347,7 +349,7 @@ export default function ReportsPage() {
       }
       setProfile(await profileResponse.json());
 
-      const reportResponse = await fetch(`${getApiUrl()}/reports/action-taken`, {
+      const reportResponse = await fetchGet(`${getApiUrl()}/reports/action-taken`, {
         credentials: "include",
       });
       if (reportResponse.status === 401) {
@@ -993,7 +995,7 @@ function ReportPhotoGallery({
       const results = await Promise.all(
         photos.map(async (photo) => {
           try {
-            const response = await fetch(
+            const response = await fetchGet(
               `${getApiUrl()}/inspections/${inspectionId}/photos/${photo.id}`,
               { credentials: "include" },
             );
@@ -1110,7 +1112,13 @@ function ReportPhotoGallery({
                     onClick={() => setSelectedPhoto(null)}
                   />
                 </div>
-                <img src={selectedPhoto.url} alt={selectedPhoto.fileName} />
+                <Image
+                  src={selectedPhoto.url}
+                  alt={selectedPhoto.fileName}
+                  width={1200}
+                  height={800}
+                  unoptimized
+                />
               </div>
             </div>
           )}

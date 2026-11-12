@@ -14,8 +14,10 @@ import {
   Tile,
 } from "@carbon/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { getApiUrl } from "@/lib/api-url";
+import { fetchGet } from "@/lib/fetch-get";
 import { useEffect, useState } from "react";
 
 const IS_DEMO_LOGIN =
@@ -76,7 +78,7 @@ export default function DashboardPage() {
 
     async function loadProfile() {
       try {
-        const response = await fetch(`${getApiUrl()}/auth/me`, {
+        const response = await fetchGet(`${getApiUrl()}/auth/me`, {
           credentials: "include",
         });
         if (response.status === 401) {
@@ -93,7 +95,7 @@ export default function DashboardPage() {
         const profile: UserProfile = await response.json();
         if (active) {
           setUser(profile);
-          const ghatsResponse = await fetch(`${getApiUrl()}/ghats`, {
+          const ghatsResponse = await fetchGet(`${getApiUrl()}/ghats`, {
             credentials: "include",
           });
           if (!ghatsResponse.ok) {
@@ -155,7 +157,9 @@ export default function DashboardPage() {
                     title="Dashboard unavailable"
                     subtitle={error}
                   />
-                  <Button href="/login">Return to sign in</Button>
+                  <Button as={Link} href="/login">
+                    Return to sign in
+                  </Button>
                 </>
               ) : (
                 <p role="status">Checking your session...</p>
@@ -333,10 +337,11 @@ export default function DashboardPage() {
                     </div>
                   ))}
                   <div className="dashboard-workflow__actions">
-                    <Button href="/ghats" renderIcon={RainDrop}>
+                    <Button as={Link} href="/ghats" renderIcon={RainDrop}>
                       Manage ghats
                     </Button>
                     <Button
+                      as={Link}
                       kind="tertiary"
                       href="/reports"
                       renderIcon={Report}

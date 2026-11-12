@@ -68,10 +68,10 @@ export default function LoginPage() {
           <span className="login-aside__brand-mark" aria-hidden="true">
             R
           </span>
-          <span>Puja Readiness Portal</span>
+          <span>Purba Medinipur Puja Readiness Portal</span>
         </div>
         <div className="login-aside__content">
-          <p className="login-aside__eyebrow">PUJA READINESS PORTAL</p>
+          <p className="login-aside__eyebrow">PURBA MEDINIPUR PUJA READINESS PORTAL</p>
           <h1 className="login-aside__title">
             Every ghat, ready for the season.
           </h1>

@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { getApiUrl } from "@/lib/api-url";
+import { fetchGet } from "@/lib/fetch-get";
 import { type FormEvent, useEffect, useState } from "react";
 
 const IS_DEMO_LOGIN =
@@ -49,7 +50,7 @@ export default function ChangePasswordPage() {
           return;
         }
 
-        const response = await fetch(`${getApiUrl()}/auth/me`, {
+        const response = await fetchGet(`${getApiUrl()}/auth/me`, {
           credentials: "include",
         });
         if (response.status === 401) {
@@ -152,7 +153,7 @@ export default function ChangePasswordPage() {
       <AppHeader
         user={profile}
         onSignOut={handleLogout}
-        ariaLabel="Puja Readiness Portal change password"
+        ariaLabel="Purba Medinipur Puja Readiness Portal change password"
       />
 
       <main className="dashboard-main change-password-main" id="main-content">

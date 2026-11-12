@@ -2019,12 +2019,17 @@ body {
 
   .users-main .users-table-tile,
   .users-main .users-table-wrapper {
+    box-sizing: border-box;
     width: 100%;
     min-width: 0;
+    max-width: 100%;
   }
 
   .cds--header.app-shell-header {
     display: grid;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100vw;
     grid-template-areas:
       "brand actions"
       "navigation navigation";
@@ -2053,13 +2058,16 @@ body {
     grid-area: navigation;
     display: grid;
     width: 100%;
+    min-width: 0;
     height: auto;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-left: 0;
   }
 
   .app-header__nav > .cds--btn {
+    box-sizing: border-box;
     width: 100%;
+    min-width: 0;
     max-width: none;
     justify-content: flex-start;
     padding-inline: 0.5rem;

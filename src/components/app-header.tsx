@@ -2,6 +2,7 @@
 
 import { ArrowLeft, RainDrop, Report, UserMultiple } from "@carbon/icons-react";
 import { Button, Header, HeaderName } from "@carbon/react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 type UserRole = "user" | "admin";
@@ -25,11 +26,12 @@ export function AppHeader({
 
   return (
     <Header className="app-shell-header" aria-label={ariaLabel}>
-      <HeaderName href="/dashboard" prefix="">
-        Puja Readiness Portal
+      <HeaderName as={Link} href="/dashboard" prefix="">
+        Purba Medinipur Puja Readiness Portal
       </HeaderName>
       <nav className="app-header__nav" aria-label="Main navigation">
         <Button
+          as={Link}
           kind="ghost"
           href="/dashboard"
           aria-current={pathname === "/dashboard" ? "page" : undefined}
@@ -37,6 +39,7 @@ export function AppHeader({
           Dashboard
         </Button>
         <Button
+          as={Link}
           kind="ghost"
           href="/ghats"
           renderIcon={RainDrop}
@@ -45,6 +48,7 @@ export function AppHeader({
           Ghats
         </Button>
         <Button
+          as={Link}
           kind="ghost"
           href="/reports"
           renderIcon={Report}
@@ -53,6 +57,7 @@ export function AppHeader({
           Action Taken Report
         </Button>
         <Button
+          as={Link}
           kind="ghost"
           href="/change-password"
           aria-current={pathname === "/change-password" ? "page" : undefined}
@@ -61,6 +66,7 @@ export function AppHeader({
         </Button>
         {user?.role === "admin" && (
           <Button
+            as={Link}
             kind="ghost"
             href="/users"
             renderIcon={UserMultiple}
