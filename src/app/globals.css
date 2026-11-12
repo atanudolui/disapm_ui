@@ -27,7 +27,9 @@ body {
     var(--cds-layer);
   color: var(--cds-text-primary);
 }
-
+main {
+  padding: 4rem 0 !important;
+}
 .cds--header.app-shell-header {
   background: linear-gradient(105deg, #43215d 0%, #753265 55%, #a94355 100%);
   border-bottom: 2px solid #f1a208;
