@@ -1309,7 +1309,7 @@ export default function GhatsPage() {
                     }));
                   }}
                 >
-                  <SelectItem value="" text="Select a block" />
+                  <SelectItem value="" text="Select a block/Municipality" />
                   {BLOCKS.map((block) => (
                     <SelectItem key={block} value={block} text={block} />
                   ))}

@@ -459,7 +459,6 @@ body {
 }
 
 .dashboard-title {
-  max-width: 25ch;
   margin: 0 0 0.75rem;
   color: var(--festival-violet);
   font-size: clamp(2rem, 3vw, 2.5rem);
