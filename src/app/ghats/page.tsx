@@ -61,6 +61,7 @@ const BLOCKS = [
   "Nandigram II",
   "Nandigram-I",
   "Panskura-I",
+  "Panskura Municipality",
   "Patashpur-I",
   "Patashpur-II",
   "Ramnagar-I",

@@ -1201,6 +1201,119 @@ body {
   transition: width 180ms ease-out;
 }
 
+.report-chart {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin: -0.75rem 0 2rem;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid #d9e5e2;
+  border-radius: 0.875rem;
+  background: linear-gradient(120deg, #f6fbf9 0%, #fff 58%, #fff9f3 100%);
+  box-shadow: 0 0.5rem 1.75rem rgb(18 51 45 / 6%);
+}
+
+.dashboard-chart {
+  margin-top: 1.5rem;
+}
+
+.dashboard-chart__empty {
+  display: grid;
+  height: 100%;
+  margin: 0;
+  place-items: center;
+  color: var(--cds-text-secondary);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.report-chart__visual {
+  width: 22rem;
+  max-width: 100%;
+  height: 18rem;
+  flex: 0 0 22rem;
+}
+
+.report-chart__details h2 {
+  margin: 0 0 0.5rem;
+  color: var(--cds-text-primary);
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.report-chart__details {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.report-chart__details > p {
+  margin: 0 0 0.75rem;
+  color: var(--cds-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.report-chart__details > .report-chart__eyebrow {
+  margin: 0 0 0.375rem;
+  color: var(--festival-teal);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.report-chart__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.report-chart__metric {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 0.75rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--cds-border-subtle-01);
+  border-radius: 0.625rem;
+  background: rgb(255 255 255 / 82%);
+}
+
+.report-chart__metric-name {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--cds-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.report-chart__metric-name > span {
+  width: 0.625rem;
+  height: 0.625rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--festival-teal);
+}
+
+.report-chart__metric--awaiting .report-chart__metric-name > span {
+  background: #ff832b;
+}
+
+.report-chart__metric > strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--cds-text-primary);
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.report-chart__metric > small {
+  color: var(--cds-text-secondary);
+  font-size: 0.6875rem;
+}
+
 .report-executive-summary {
   display: flex;
   align-items: center;
@@ -2061,6 +2174,21 @@ body {
     align-items: flex-start;
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .report-chart {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .report-chart__visual {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .report-chart__metrics {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .report-table__coordinates {

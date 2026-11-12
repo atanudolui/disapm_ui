@@ -4,6 +4,7 @@ import {
   RainDrop,
   Report,
 } from "@carbon/icons-react";
+import { PieChart } from "@carbon/charts-react";
 import {
   Button,
   Column,
@@ -45,6 +46,11 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [isDemoSession, setIsDemoSession] = useState(false);
   const [ghats, setGhats] = useState<GhatSummary[]>([]);
+  const inspectedGhats = ghats.filter((ghat) => ghat.inspections.length > 0).length;
+  const awaitingInspection = ghats.length - inspectedGhats;
+  const inspectionCoverage = ghats.length
+    ? Math.round((inspectedGhats / ghats.length) * 100)
+    : 0;
 
   useEffect(() => {
     let active = true;
@@ -229,6 +235,66 @@ export default function DashboardPage() {
                   </Tile>
                 </Column>
               ))}
+              <Column sm={4} md={8} lg={16}>
+                <section className="report-chart dashboard-chart" aria-labelledby="dashboard-chart-title">
+                  <div className="report-chart__visual">
+                    {ghats.length > 0 ? (
+                      <PieChart
+                        data={[
+                          { group: "Inspected", value: inspectedGhats },
+                          { group: "Awaiting inspection", value: awaitingInspection },
+                        ]}
+                        options={{
+                          accessibility: {
+                            svgAriaLabel: `${inspectedGhats} of ${ghats.length} ghats inspected; ${awaitingInspection} awaiting inspection`,
+                          },
+                          height: "300px",
+                          resizable: true,
+                          color: {
+                            scale: {
+                              Inspected: "#007d79",
+                              "Awaiting inspection": "#ff832b",
+                            },
+                          },
+                          legend: { enabled: true, position: "bottom" },
+                          tooltip: {
+                            enabled: true,
+                            valueFormatter: (value) => `${value} ghats`,
+                          },
+                            toolbar: {
+                            enabled: false
+                          },
+                        }}
+                      />
+                    ) : (
+                      <p className="dashboard-chart__empty">
+                        Add ghats to see inspection coverage here.
+                      </p>
+                    )}
+                  </div>
+                  <div className="report-chart__details">
+                    <p className="report-chart__eyebrow">FIELD INSPECTIONS</p>
+                    <h2 id="dashboard-chart-title">Inspection coverage</h2>
+                    <p>See how many registered ghats have an inspection on record.</p>
+                    <div className="report-chart__metrics">
+                      <div className="report-chart__metric report-chart__metric--inspected">
+                        <span className="report-chart__metric-name">
+                          <span aria-hidden="true" /> Inspected
+                        </span>
+                        <strong>{inspectedGhats}</strong>
+                        <small>{inspectionCoverage}% of registered ghats</small>
+                      </div>
+                      <div className="report-chart__metric report-chart__metric--awaiting">
+                        <span className="report-chart__metric-name">
+                          <span aria-hidden="true" /> Awaiting inspection
+                        </span>
+                        <strong>{awaitingInspection}</strong>
+                        <small>{ghats.length ? 100 - inspectionCoverage : 0}% of registered ghats</small>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </Column>
               <Column sm={4} md={8} lg={16}>
                 <div className="dashboard-section-heading">
                   <div>

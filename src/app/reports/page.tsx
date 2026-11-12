@@ -1,6 +1,7 @@
 "use client";
 
 import { Close, Download, Location } from "@carbon/icons-react";
+import { PieChart } from "@carbon/charts-react";
 import {
   Accordion,
   AccordionItem,
@@ -521,6 +522,58 @@ export default function ReportsPage() {
                     <p className="report-stat__hint">Recorded as completed</p>
                   </Tile>
                 </div>
+                <section className="report-chart" aria-labelledby="report-chart-title">
+                  <div className="report-chart__visual">
+                    <PieChart
+                      data={[
+                        { group: "Inspected", value: report.inspectedGhats },
+                        { group: "Awaiting inspection", value: uninspectedGhats },
+                      ]}
+                      options={{
+                        accessibility: {
+                          svgAriaLabel: `${report.inspectedGhats} of ${report.totalGhats} ghats inspected; ${uninspectedGhats} awaiting inspection`,
+                        },
+                        height: "300px",
+                        resizable: true,
+                        color: {
+                          scale: {
+                            Inspected: "#007d79",
+                            "Awaiting inspection": "#ff832b",
+                          },
+                        },
+                        legend: { enabled: true, position: "bottom" },
+                        tooltip: {
+                          enabled: true,
+                          valueFormatter: (value) => `${value} ghats`,
+                        },
+                        toolbar: {
+                          enabled: false
+                        },
+                      }}
+                    />
+                  </div>
+                  <div className="report-chart__details">
+                    <p className="report-chart__eyebrow">FIELD INSPECTIONS</p>
+                    <h2 id="report-chart-title">Inspection coverage</h2>
+                    <p>Share of registered ghats with a recorded inspection.</p>
+                    <div className="report-chart__metrics">
+                      <div className="report-chart__metric report-chart__metric--inspected">
+                        <span className="report-chart__metric-name">
+                          <span aria-hidden="true" /> Inspected
+                        </span>
+                        <strong>{report.inspectedGhats}</strong>
+                        <small>{inspectionCoverage}% of registered ghats</small>
+                      </div>
+                      <div className="report-chart__metric report-chart__metric--awaiting">
+                        <span className="report-chart__metric-name">
+                          <span aria-hidden="true" /> Awaiting inspection
+                        </span>
+                        <strong>{uninspectedGhats}</strong>
+                        <small>{report.totalGhats ? 100 - inspectionCoverage : 0}% of registered ghats</small>
+                      </div>
+                    </div>
+                  </div>
+                </section>
                 {report.ghats.length === 0 ? (
                   <Tile className="report-empty">
                     No ghats have been registered. Add ghats and record joint

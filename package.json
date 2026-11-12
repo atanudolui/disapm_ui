@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@carbon/charts-react": "^1.27.27",
     "@carbon/react": "^1.120.0",
     "@carbon/styles": "^1.119.0",
     "next": "16.4.5",
