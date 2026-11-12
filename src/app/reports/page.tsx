@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Location } from "@carbon/icons-react";
+import { Close, Download, Location } from "@carbon/icons-react";
 import {
   Accordion,
   AccordionItem,
@@ -627,7 +627,10 @@ export default function ReportsPage() {
                                                     size={16}
                                                     aria-hidden="true"
                                                   />
-                                                  Location · {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                                                  <span>Location</span>
+                                                  <span className="report-table__coordinates">
+                                                    {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                                                  </span>
                                                 </a>
                                               )
                                             : "Location not recorded"}
@@ -697,6 +700,19 @@ export default function ReportsPage() {
                                                   .filter(Boolean)
                                                   .join(" · ") || "Location details unavailable"}
                                               </p>
+                                              {entry.latestInspection?.latitude != null &&
+                                                entry.latestInspection.longitude != null && (
+                                                  <a
+                                                    className="report-detail-heading__map-link"
+                                                    href={`https://www.google.com/maps?q=${entry.latestInspection.latitude},${entry.latestInspection.longitude}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    aria-label={`Open map for ${entry.ghat.name}`}
+                                                  >
+                                                    <Location size={16} aria-hidden="true" />
+                                                    <span>Open site location</span>
+                                                  </a>
+                                                )}
                                             </div>
                                             {entry.latestInspection && (
                                               <div className="report-detail-heading__occasion">
@@ -910,6 +926,10 @@ function ReportPhotoGallery({
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [photoErrors, setPhotoErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(photos.length > 0);
+  const [selectedPhoto, setSelectedPhoto] = useState<{
+    url: string;
+    fileName: string;
+  } | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -970,6 +990,15 @@ function ReportPhotoGallery({
     };
   }, [inspectionId, photos, router]);
 
+  useEffect(() => {
+    if (!selectedPhoto) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedPhoto(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedPhoto]);
+
   return (
     <section className="report-photos" aria-label="Inspection photos">
       <h3>Inspection photos</h3>
@@ -988,13 +1017,12 @@ function ReportPhotoGallery({
               return (
                 <figure className="report-photos__item" key={photo.id}>
                   {url ? (
-                    <a
+                    <button
                       className="report-photos__preview"
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
+                      type="button"
+                      onClick={() => setSelectedPhoto({ url, fileName: photo.fileName })}
                       style={{ backgroundImage: `url("${url}")` }}
-                      aria-label={`Open ${photo.fileName} in a new tab`}
+                      aria-label={`View ${photo.fileName}`}
                     />
                   ) : photoErrors[photo.id] ? (
                     <p className="report-photos__error" role="alert">
@@ -1003,11 +1031,36 @@ function ReportPhotoGallery({
                   ) : (
                     <div className="report-photos__placeholder" />
                   )}
-                  <figcaption>{photo.fileName}</figcaption>
                 </figure>
               );
             })}
           </div>
+          {selectedPhoto && (
+            <div
+              className="report-photo-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Inspection photo preview"
+              onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                  setSelectedPhoto(null);
+                }
+              }}
+            >
+              <div className="report-photo-modal__content">
+                <div className="report-photo-modal__toolbar">
+                  <Button
+                    kind="ghost"
+                    renderIcon={Close}
+                    iconDescription="Close photo"
+                    hasIconOnly
+                    onClick={() => setSelectedPhoto(null)}
+                  />
+                </div>
+                <img src={selectedPhoto.url} alt={selectedPhoto.fileName} />
+              </div>
+            </div>
+          )}
         </>
       )}
     </section>
