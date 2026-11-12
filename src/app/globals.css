@@ -27,9 +27,7 @@ body {
     var(--cds-layer);
   color: var(--cds-text-primary);
 }
-main {
-  padding: 4rem 0 !important;
-}
+
 .cds--header.app-shell-header {
   background: linear-gradient(105deg, #43215d 0%, #753265 55%, #a94355 100%);
   border-bottom: 2px solid #f1a208;
@@ -405,7 +403,7 @@ main {
 
 .dashboard-main {
   min-height: calc(100vh - 3rem);
-  padding: 3rem 0 5rem;
+  padding: 4rem 0 5rem;
   background:
     radial-gradient(ellipse at 0% 0%, rgb(241 162 8 / 18%), transparent 34rem),
     radial-gradient(
@@ -615,7 +613,7 @@ main {
 
 .users-main {
   min-height: calc(100vh - 3rem);
-  padding: 3rem 0 5rem;
+  padding: 4rem 0 5rem;
   background:
     radial-gradient(ellipse at 0% 5%, rgb(22 138 138 / 16%), transparent 34rem),
     radial-gradient(
@@ -1006,7 +1004,7 @@ main {
 
 .report-main {
   min-height: calc(100vh - 3rem);
-  padding: 3rem 0 5rem;
+  padding: 4rem 0 5rem;
   background:
     radial-gradient(ellipse at 0% 0%, rgb(241 162 8 / 17%), transparent 34rem),
     radial-gradient(
