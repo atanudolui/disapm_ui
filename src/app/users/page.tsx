@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { SuccessToast } from "@/components/success-toast";
 import { getApiUrl } from "@/lib/api-url";
+import { fetchGet } from "@/lib/fetch-get";
 import { validateTextFields } from "@/lib/field-validation";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 
@@ -151,7 +152,7 @@ export default function UsersPage() {
         return;
       }
 
-      const profileResponse = await fetch(`${getApiUrl()}/auth/me`, {
+      const profileResponse = await fetchGet(`${getApiUrl()}/auth/me`, {
         credentials: "include",
       });
       if (profileResponse.status === 401) {
@@ -167,7 +168,7 @@ export default function UsersPage() {
         return;
       }
 
-      const usersResponse = await fetch(`${getApiUrl()}/users`, {
+      const usersResponse = await fetchGet(`${getApiUrl()}/users`, {
         credentials: "include",
       });
       if (usersResponse.status === 401) {
