@@ -3,6 +3,8 @@
 A React and Next.js App Router starter using TypeScript and Carbon Design
 System.
 
+For instructions on using the portal, see the [User Guide](./USER_GUIDE.md).
+
 ## Getting started
 
 ```bash
