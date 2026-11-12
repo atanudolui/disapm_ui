@@ -155,12 +155,12 @@ export default function ChangePasswordPage() {
         ariaLabel="Puja Readiness Portal change password"
       />
 
-      <main className="dashboard-main" id="main-content">
+      <main className="dashboard-main change-password-main" id="main-content">
         <Grid>
           <Column sm={4} md={8} lg={16}>
             <p className="dashboard-eyebrow">ACCOUNT</p>
             <h1 className="dashboard-title">Change password</h1>
-            <p className="dashboard-description">
+            <p className="dashboard-description change-password-description">
               Verify your current password before choosing a new one.
             </p>
             {isLoading ? (
@@ -181,7 +181,16 @@ export default function ChangePasswordPage() {
                 subtitle="Password changes are unavailable in demo mode. Sign in with an API account to change your password."
               />
             ) : (
-              <Tile>
+              <Tile className="change-password-panel">
+                <div className="change-password-panel__heading">
+                  <p className="change-password-panel__eyebrow">
+                    ACCOUNT SECURITY
+                  </p>
+                  <h2>Update your credentials</h2>
+                  <p>
+                    Choose a strong password with at least 8 characters.
+                  </p>
+                </div>
                 {error && (
                   <InlineNotification
                     kind="error"
@@ -214,34 +223,39 @@ export default function ChangePasswordPage() {
                     required
                     maxLength={72}
                   />
-                  <PasswordInput
-                    id="new-password"
-                    name="newPassword"
-                    labelText="New password"
-                    autoComplete="new-password"
-                    value={newPassword}
-                    onChange={(event) =>
-                      setNewPassword(event.currentTarget.value)
-                    }
-                    required
-                    minLength={8}
-                    maxLength={72}
-                  />
-                  <PasswordInput
-                    id="confirm-password"
-                    name="confirmPassword"
-                    labelText="Confirm new password"
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(event) =>
-                      setConfirmPassword(event.currentTarget.value)
-                    }
-                    required
-                    minLength={8}
-                    maxLength={72}
-                  />
-                  <Button type="submit" disabled={isSaving}>
-                    {isSaving ? "Changing password..." : "Change password"}
+                  <div className="change-password-form__new-passwords">
+                    <p className="change-password-form__section-title">
+                      Choose a new password
+                    </p>
+                    <PasswordInput
+                      id="new-password"
+                      name="newPassword"
+                      labelText="New password"
+                      autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(event) =>
+                        setNewPassword(event.currentTarget.value)
+                      }
+                      required
+                      minLength={8}
+                      maxLength={72}
+                    />
+                    <PasswordInput
+                      id="confirm-password"
+                      name="confirmPassword"
+                      labelText="Confirm new password"
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={(event) =>
+                        setConfirmPassword(event.currentTarget.value)
+                      }
+                      required
+                      minLength={8}
+                      maxLength={72}
+                    />
+                  </div>
+                  <Button className="change-password-form__submit" type="submit" disabled={isSaving}>
+                    {isSaving ? "Updating password..." : "Update password"}
                   </Button>
                 </form>
               </Tile>
