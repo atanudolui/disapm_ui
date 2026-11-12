@@ -869,7 +869,7 @@ body {
 
 .report-main {
   min-height: calc(100vh - 3rem);
-  padding: 2.5rem 0 5rem;
+  padding: 3rem 0 5rem;
   background:
     radial-gradient(ellipse at 0% 0%, rgb(241 162 8 / 17%), transparent 34rem),
     radial-gradient(
@@ -891,6 +891,22 @@ body {
   justify-content: space-between;
   gap: 2rem;
   margin-bottom: 2rem;
+}
+
+.report-heading > div {
+  min-width: 0;
+}
+
+.report-heading .dashboard-eyebrow {
+  display: block;
+  max-width: 100%;
+  margin: 0 0 1rem;
+  color: var(--festival-rose);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  white-space: normal;
 }
 
 .report-heading .dashboard-description {
@@ -1226,6 +1242,32 @@ body {
   cursor: pointer;
 }
 
+.report-table__ghat {
+  display: grid;
+  min-width: 0;
+  gap: 0.375rem;
+}
+
+.report-table__location {
+  padding-left: 2rem;
+  color: var(--cds-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.report-table__location a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  vertical-align: middle;
+}
+
+.report-table__location a svg {
+  flex: 0 0 auto;
+}
+
 .report-table__toggle:focus-visible {
   outline: 2px solid var(--cds-focus);
   outline-offset: 3px;
@@ -1243,17 +1285,73 @@ body {
 
 .report-table__details-row > td {
   padding: 0;
-  background: var(--cds-layer);
+  background: #f7f3fb;
 }
 
 .report-table__details {
-  padding: 1rem 1.5rem 1.5rem;
+  margin: 0.75rem 1rem 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgb(99 59 135 / 16%);
+  border-radius: 0.75rem;
+  background: linear-gradient(140deg, #fff 0%, #fffaf0 100%);
+  box-shadow: 0 8px 24px rgb(48 25 61 / 7%);
+}
+
+.report-detail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.25rem 0 1rem;
+  border-bottom: 1px solid rgb(99 59 135 / 14%);
+}
+
+.report-detail-heading h2 {
+  margin: 0;
+  color: var(--festival-violet);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.report-detail-heading p {
+  margin: 0.3rem 0 0;
+  color: var(--cds-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.report-detail-heading .report-detail-heading__eyebrow {
+  margin: 0 0 0.25rem;
+  color: var(--festival-rose);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.report-detail-heading__occasion {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 10rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--festival-saffron);
+  border-radius: 0.25rem;
+  background: #fff5dc;
+  font-size: 0.8125rem;
+}
+
+.report-detail-heading__occasion span {
+  color: var(--cds-text-secondary);
+  font-size: 0.75rem;
+}
+
+.report-detail-heading__occasion strong {
+  color: var(--cds-text-primary);
 }
 
 .report-table__details .report-ghat__details {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0 0 1rem;
-  padding: 0 0 1rem;
+  padding: 1rem 0;
 }
 
 .report-table .report-status {
@@ -1412,45 +1510,66 @@ body {
 
 .report-checklist {
   margin-top: 1rem;
-  border: 1px solid var(--cds-border-subtle-01);
-  background: var(--cds-layer-01);
+  overflow: hidden;
+  border: 1px solid rgb(99 59 135 / 20%);
+  border-radius: 0.625rem;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(48 25 61 / 5%);
 }
 
 .report-checklist .cds--accordion__heading {
-  min-height: 3.5rem;
-  background: var(--cds-layer-01);
+  min-height: 3.75rem;
+  background: linear-gradient(100deg, #f2ecfa, #fff9eb);
 }
 
 .report-checklist .cds--accordion__title {
   font-size: 1rem;
   font-weight: 600;
+  color: var(--festival-violet);
 }
 
 .report-checklist .cds--accordion__content {
-  padding-right: 1rem;
-  padding-left: 1rem;
-  background: var(--cds-layer-01);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+  padding: 1rem;
+  background: #fcfbfd;
 }
 
 .report-checklist__hint {
-  margin: 0 0 0.75rem;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0 0 0.25rem;
   color: var(--cds-text-secondary);
   font-size: 0.75rem;
 }
 
 .report-checklist__item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 3.75rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--cds-border-subtle-01);
-  background: var(--cds-layer);
+  min-height: 4.25rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid rgb(99 59 135 / 12%);
+  border-left: 3px solid var(--festival-teal);
+  border-radius: 0.375rem;
+  background: #fff;
+  box-shadow: 0 2px 5px rgb(48 25 61 / 3%);
+  transition: transform 140ms ease, box-shadow 140ms ease;
 }
 
-.report-checklist__item + .report-checklist__item {
-  margin-top: 0.5rem;
+.report-checklist__item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgb(48 25 61 / 8%);
+}
+
+.report-checklist__item--deficiency {
+  border-left-color: var(--festival-coral);
+}
+
+.report-checklist__item--not_applicable {
+  border-left-color: #8b8b8b;
 }
 
 .report-checklist__item > div {
@@ -1460,7 +1579,14 @@ body {
 .report-checklist__item p {
   margin: 0.25rem 0 0;
   color: var(--cds-text-secondary);
+  font-size: 0.8125rem;
   line-height: 1.5;
+}
+
+.report-checklist__item .cds--tag {
+  flex: 0 0 auto;
+  margin: 0;
+  border-radius: 999px;
 }
 
 .report-deficiencies h3 {
@@ -1698,13 +1824,22 @@ body {
   }
 
   .report-main {
-    padding: 2rem 0 4rem;
+    padding: 10rem 0 4rem;
   }
 
   .report-heading {
     align-items: stretch;
     flex-direction: column;
     gap: 1rem;
+    margin-top: 0.75rem;
+  }
+
+  .report-heading > .cds--btn {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    justify-content: center;
   }
 
   .report-stats {
@@ -1715,6 +1850,25 @@ body {
     align-items: flex-start;
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .report-table__details {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+
+  .report-detail-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .report-detail-heading__occasion {
+    min-width: 0;
+  }
+
+  .report-checklist .cds--accordion__content {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .report-ghat__details {

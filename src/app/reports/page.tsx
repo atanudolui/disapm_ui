@@ -1,6 +1,6 @@
 "use client";
 
-import { Download } from "@carbon/icons-react";
+import { Download, Location } from "@carbon/icons-react";
 import {
   Accordion,
   AccordionItem,
@@ -275,6 +275,8 @@ export default function ReportsPage() {
         entry.ghat.block,
         entry.ghat.nodalOfficerName,
         entry.ghat.nodalOfficerContact,
+        entry.latestInspection?.latitude?.toFixed(5) ?? "",
+        entry.latestInspection?.longitude?.toFixed(5) ?? "",
         inspectionText,
         deficiencyText,
       ]
@@ -396,15 +398,10 @@ export default function ReportsPage() {
           <Column sm={4} md={8} lg={16}>
             <div className="report-heading">
               <div>
-                <p></p>
                 <p className="dashboard-eyebrow">
                   GOVERNMENT OF WEST BENGAL · FIELD COMPLIANCE
                 </p>
                 <h1 className="dashboard-title">Action Taken Report</h1>
-                <p className="dashboard-description">
-                  Executive overview of ghat readiness, inspection coverage and
-                  outstanding actions.
-                </p>
               </div>
               <Button
                 kind="primary"
@@ -575,6 +572,10 @@ export default function ReportsPage() {
                               const isExpanded = expandedGhatIds.has(
                                 entry.ghat.id,
                               );
+                              const latitude =
+                                entry.latestInspection?.latitude;
+                              const longitude =
+                                entry.latestInspection?.longitude;
                               const isOutsidePage =
                                 index < (currentPage - 1) * pageSize ||
                                 index >= currentPage * pageSize;
@@ -589,28 +590,49 @@ export default function ReportsPage() {
                                     }
                                   >
                                     <th scope="row">
-                                      <button
-                                        className="report-table__toggle"
-                                        type="button"
-                                        aria-expanded={isExpanded}
-                                        aria-controls={detailsId}
-                                        onClick={() =>
-                                          setExpandedGhatIds((current) => {
-                                            const next = new Set(current);
-                                            if (next.has(entry.ghat.id)) {
-                                              next.delete(entry.ghat.id);
-                                            } else {
-                                              next.add(entry.ghat.id);
-                                            }
-                                            return next;
-                                          })
-                                        }
-                                      >
-                                        <span aria-hidden="true">
-                                          {isExpanded ? "-" : "+"}
+                                      <div className="report-table__ghat">
+                                        <button
+                                          className="report-table__toggle"
+                                          type="button"
+                                          aria-expanded={isExpanded}
+                                          aria-controls={detailsId}
+                                          onClick={() =>
+                                            setExpandedGhatIds((current) => {
+                                              const next = new Set(current);
+                                              if (next.has(entry.ghat.id)) {
+                                                next.delete(entry.ghat.id);
+                                              } else {
+                                                next.add(entry.ghat.id);
+                                              }
+                                              return next;
+                                            })
+                                          }
+                                        >
+                                          <span aria-hidden="true">
+                                            {isExpanded ? "-" : "+"}
+                                          </span>
+                                          {entry.ghat.name}
+                                        </button>
+                                        <span className="report-table__location">
+                                          {latitude != null &&
+                                          longitude != null
+                                            ? (
+                                                <a
+                                                  href={`https://www.google.com/maps?q=${latitude},${longitude}`}
+                                                  target="_blank"
+                                                  rel="noreferrer"
+                                                  aria-label={`Open map for ${entry.ghat.name} at latitude ${latitude}, longitude ${longitude}`}
+                                                >
+                                                  <Location
+                                                    size={16}
+                                                    aria-hidden="true"
+                                                  />
+                                                  Location · {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                                                </a>
+                                              )
+                                            : "Location not recorded"}
                                         </span>
-                                        {entry.ghat.name}
-                                      </button>
+                                      </div>
                                     </th>
                                     <td>{entry.ghat.subDivision || "—"}</td>
                                     <td>{entry.ghat.block || "—"}</td>
@@ -664,6 +686,31 @@ export default function ReportsPage() {
                                     >
                                       <td colSpan={6}>
                                         <div className="report-table__details">
+                                          <div className="report-detail-heading">
+                                            <div>
+                                              <p className="report-detail-heading__eyebrow">
+                                                Site profile
+                                              </p>
+                                              <h2>{entry.ghat.name}</h2>
+                                              <p>
+                                                {[entry.ghat.district, entry.ghat.subDivision, entry.ghat.block]
+                                                  .filter(Boolean)
+                                                  .join(" · ") || "Location details unavailable"}
+                                              </p>
+                                            </div>
+                                            {entry.latestInspection && (
+                                              <div className="report-detail-heading__occasion">
+                                                <span>Latest occasion</span>
+                                                <strong>{entry.latestInspection.occasion}</strong>
+                                                <span>
+                                                  {formatDateRange(
+                                                    entry.latestInspection.periodStart,
+                                                    entry.latestInspection.periodEnd,
+                                                  )}
+                                                </span>
+                                              </div>
+                                            )}
+                                          </div>
                                           <div className="report-ghat__details">
                                             <p>
                                               <span>District</span>
@@ -701,7 +748,7 @@ export default function ReportsPage() {
                                                     if (!item) return null;
                                                     return (
                                                       <div
-                                                        className="report-checklist__item"
+                                                        className={`report-checklist__item report-checklist__item--${item.status}`}
                                                         key={key}
                                                       >
                                                         <div>
