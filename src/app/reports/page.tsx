@@ -1,6 +1,6 @@
 "use client";
 
-import { Close, Download, Location } from "@carbon/icons-react";
+import { ChevronDown, ChevronUp, Close, Download, Location } from "@carbon/icons-react";
 import { PieChart } from "@carbon/charts-react";
 import {
   Accordion,
@@ -9,6 +9,7 @@ import {
   Column,
   Grid,
   InlineNotification,
+  MultiSelect,
   Pagination,
   Search,
   Tag,
@@ -247,12 +248,40 @@ export default function ReportsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [reportSearch, setReportSearch] = useState("");
+  const [selectedSubDivisions, setSelectedSubDivisions] = useState<string[]>([]);
+  const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [expandedGhatIds, setExpandedGhatIds] = useState<Set<string>>(
     () => new Set(),
   );
   const normalizedReportSearch = reportSearch.trim().toLocaleLowerCase();
+  const subDivisionOptions = Array.from(
+    new Set(report?.ghats.map((entry) => entry.ghat.subDivision).filter(Boolean) ?? []),
+  ).sort((a, b) => a.localeCompare(b));
+  const blockOptions = Array.from(
+    new Set(report?.ghats.map((entry) => entry.ghat.block).filter(Boolean) ?? []),
+  ).sort((a, b) => a.localeCompare(b));
+  const statusOptions = [
+    "Inspection needed",
+    "Actions pending",
+    "Ready for submission",
+  ];
   const filteredGhats =
     report?.ghats.filter((entry) => {
+      const status = !entry.latestInspection
+        ? "Inspection needed"
+        : entry.pendingDeficiencies.length > 0
+          ? "Actions pending"
+          : "Ready for submission";
+      if (
+        (selectedSubDivisions.length > 0 &&
+          !selectedSubDivisions.includes(entry.ghat.subDivision)) ||
+        (selectedBlocks.length > 0 &&
+          !selectedBlocks.includes(entry.ghat.block)) ||
+        (selectedStatuses.length > 0 && !selectedStatuses.includes(status))
+      ) {
+        return false;
+      }
       if (!normalizedReportSearch) return true;
       const inspectionText = entry.latestInspection
         ? [
@@ -444,11 +473,11 @@ export default function ReportsPage() {
                       REPORTING AUTHORITY
                     </p>
                     <p className="report-overview__order">
-                      District Magistrate Purba Medinipur
+                      District Magistrate & Collector, Purba Medinipur
                     </p>
-                    <p className="report-overview__generated">
+                    {/* <p className="report-overview__generated">
                       Generated {new Date(report.generatedAt).toLocaleString()}
-                    </p>
+                    </p> */}
                   </div>
                 </section>
                 <section
@@ -600,6 +629,45 @@ export default function ReportsPage() {
                           setPage(1);
                         }}
                       />
+                      <MultiSelect<string>
+                        className="report-filter"
+                        id="action-report-sub-division-filter"
+                        titleText="Sub-Division"
+                        label="Select sub-divisions"
+                        items={subDivisionOptions}
+                        selectedItems={selectedSubDivisions}
+                        itemToString={(item) => item ?? ""}
+                        onChange={({ selectedItems }) => {
+                          setSelectedSubDivisions(selectedItems ?? []);
+                          setPage(1);
+                        }}
+                      />
+                      <MultiSelect<string>
+                        className="report-filter"
+                        id="action-report-block-filter"
+                        titleText="Block"
+                        label="Select blocks"
+                        items={blockOptions}
+                        selectedItems={selectedBlocks}
+                        itemToString={(item) => item ?? ""}
+                        onChange={({ selectedItems }) => {
+                          setSelectedBlocks(selectedItems ?? []);
+                          setPage(1);
+                        }}
+                      />
+                      <MultiSelect<string>
+                        className="report-filter"
+                        id="action-report-status-filter"
+                        titleText="Status"
+                        label="Select statuses"
+                        items={statusOptions}
+                        selectedItems={selectedStatuses}
+                        itemToString={(item) => item ?? ""}
+                        onChange={({ selectedItems }) => {
+                          setSelectedStatuses(selectedItems ?? []);
+                          setPage(1);
+                        }}
+                      />
                       <p className="report-result-count" aria-live="polite">
                         Showing <strong>{totalItems}</strong>{" "}
                         {totalItems === 1 ? "ghat" : "ghats"}
@@ -663,9 +731,11 @@ export default function ReportsPage() {
                                             })
                                           }
                                         >
-                                          <span aria-hidden="true">
-                                            {isExpanded ? "-" : "+"}
-                                          </span>
+                                          {isExpanded ? (
+                                            <ChevronUp size={16} aria-hidden="true" />
+                                          ) : (
+                                            <ChevronDown size={16} aria-hidden="true" />
+                                          )}
                                           {entry.ghat.name}
                                         </button>
                                         <span className="report-table__location">
