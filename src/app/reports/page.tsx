@@ -116,9 +116,24 @@ function csvCell(value: unknown) {
   return `"${safeText.replaceAll('"', '""')}"`;
 }
 
+function formatTimestampForCsv(value?: string) {
+  if (!value) return "";
+  const timestamp = new Date(value);
+  return Number.isNaN(timestamp.getTime())
+    ? ""
+    : timestamp.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      });
+}
+
 function downloadInspectionCsv(report: ActionTakenReport) {
   const headers = [
-    "Ghat ID",
     "Ghat name",
     "Waterbody type",
     "District",
@@ -126,7 +141,6 @@ function downloadInspectionCsv(report: ActionTakenReport) {
     "Block",
     "Nodal Officer",
     "Nodal Officer contact",
-    "Inspection ID",
     "Festival / occasion",
     "Period start",
     "Period end",
@@ -144,7 +158,6 @@ function downloadInspectionCsv(report: ActionTakenReport) {
   const rows = report.ghats.flatMap((entry) => {
     const inspections = entry.inspections.length ? entry.inspections : [null];
     return inspections.map((inspection) => [
-      entry.ghat.id,
       entry.ghat.name,
       entry.ghat.waterbodyType,
       entry.ghat.district,
@@ -152,15 +165,14 @@ function downloadInspectionCsv(report: ActionTakenReport) {
       entry.ghat.block,
       entry.ghat.nodalOfficerName,
       entry.ghat.nodalOfficerContact,
-      inspection?.id,
       inspection?.occasion,
       inspection?.periodStart,
       inspection?.periodEnd,
       inspection?.latitude,
       inspection?.longitude,
       inspection?.inspectedBy,
-      inspection?.createdAt,
-      inspection?.updatedAt,
+      formatTimestampForCsv(inspection?.createdAt),
+      formatTimestampForCsv(inspection?.updatedAt),
       ...AREA_KEYS.flatMap((key) => [
         inspection?.checklist[key]?.status,
         inspection?.checklist[key]?.notes,
