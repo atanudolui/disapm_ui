@@ -1523,6 +1523,27 @@ body {
   white-space: nowrap;
 }
 
+.report-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.report-table__sort:hover {
+  color: var(--cds-text-primary);
+}
+
+.report-table__sort:focus-visible {
+  outline: 2px solid var(--cds-focus);
+  outline-offset: 3px;
+}
+
 .report-table tbody > tr:not(.report-table__details-row):hover {
   background: var(--cds-layer-hover-01);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Close, Download, Location } from "@carbon/icons-react";
+import { ChevronDown, ChevronUp, Close, Download, Location, Renew } from "@carbon/icons-react";
 import { PieChart } from "@carbon/charts-react";
 import {
   Accordion,
@@ -52,6 +52,7 @@ interface GhatReportEntry {
     block: string;
     nodalOfficerName: string;
     nodalOfficerContact: string;
+    updatedAt: string;
   };
   inspections: ReportInspection[];
   latestInspection: {
@@ -251,6 +252,10 @@ export default function ReportsPage() {
   const [selectedSubDivisions, setSelectedSubDivisions] = useState<string[]>([]);
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [tableSort, setTableSort] = useState<{
+    column: "updatedAt" | "ghat" | "subDivision" | "block" | "status";
+    direction: "asc" | "desc";
+  }>({ column: "updatedAt", direction: "desc" });
   const [expandedGhatIds, setExpandedGhatIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -316,9 +321,66 @@ export default function ReportsPage() {
         .toLocaleLowerCase()
         .includes(normalizedReportSearch);
     }) ?? [];
-  const totalItems = filteredGhats.length;
+  const sortedGhats = [...filteredGhats].sort((first, second) => {
+    const firstStatus = !first.latestInspection
+      ? "Inspection needed"
+      : first.pendingDeficiencies.length > 0
+        ? "Actions pending"
+        : "Ready for submission";
+    const secondStatus = !second.latestInspection
+      ? "Inspection needed"
+      : second.pendingDeficiencies.length > 0
+        ? "Actions pending"
+        : "Ready for submission";
+    const values = {
+      updatedAt: [
+        Math.max(
+          new Date(first.ghat.updatedAt).getTime(),
+          ...first.inspections.map((inspection) => new Date(inspection.updatedAt).getTime()),
+        ),
+        Math.max(
+          new Date(second.ghat.updatedAt).getTime(),
+          ...second.inspections.map((inspection) => new Date(inspection.updatedAt).getTime()),
+        ),
+      ],
+      ghat: [first.ghat.name, second.ghat.name],
+      subDivision: [first.ghat.subDivision, second.ghat.subDivision],
+      block: [first.ghat.block, second.ghat.block],
+      status: [firstStatus, secondStatus],
+    }[tableSort.column];
+    const comparison = typeof values[0] === "number"
+      ? values[0] - (values[1] as number)
+      : String(values[0]).localeCompare(String(values[1]), undefined, { sensitivity: "base" });
+    return tableSort.direction === "asc" ? comparison : -comparison;
+  });
+  const totalItems = sortedGhats.length;
   const pageCount = Math.max(1, Math.ceil(totalItems / pageSize));
   const currentPage = Math.min(page, pageCount);
+  const setSortColumn = (column: "ghat" | "subDivision" | "block" | "status") => {
+    setTableSort((current) => ({
+      column,
+      direction:
+        current.column === column && current.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+  const sortHeader = (column: "ghat" | "subDivision" | "block" | "status", label: string) => (
+    <button
+      className="report-table__sort"
+      type="button"
+      onClick={() => setSortColumn(column)}
+      aria-label={`Sort by ${label}`}
+      aria-sort={tableSort.column === column
+        ? tableSort.direction === "asc" ? "ascending" : "descending"
+        : "none"}
+    >
+      {label}
+      {tableSort.column === column && (
+        tableSort.direction === "asc"
+          ? <ChevronUp size={14} aria-hidden="true" />
+          : <ChevronDown size={14} aria-hidden="true" />
+      )}
+    </button>
+  );
   const inspectionCoverage = report?.totalGhats
     ? Math.round((report.inspectedGhats / report.totalGhats) * 100)
     : 0;
@@ -675,6 +737,16 @@ export default function ReportsPage() {
                         Showing <strong>{totalItems}</strong>{" "}
                         {totalItems === 1 ? "ghat" : "ghats"}
                       </p>
+                      <Button
+                        kind="tertiary"
+                        size="sm"
+                        renderIcon={Renew}
+                        onClick={() => void loadReport()}
+                        disabled={isLoading}
+                        aria-label="Refresh report data"
+                      >
+                        {isLoading ? "Refreshing…" : "Refresh"}
+                      </Button>
                     </div>
                     {filteredGhats.length === 0 ? (
                       <Tile className="report-empty">
@@ -685,16 +757,16 @@ export default function ReportsPage() {
                         <table className="report-table">
                           <thead>
                             <tr>
-                              <th scope="col">Ghat</th>
-                              <th scope="col">Sub-Division</th>
-                              <th scope="col">Block</th>
+                              <th scope="col">{sortHeader("ghat", "Ghat")}</th>
+                              <th scope="col">{sortHeader("subDivision", "Sub-Division")}</th>
+                              <th scope="col">{sortHeader("block", "Block")}</th>
                               <th scope="col">Festival / occasion</th>
                               <th scope="col">Festival period</th>
-                              <th scope="col">Status</th>
+                              <th scope="col">{sortHeader("status", "Status")}</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {filteredGhats.map((entry, index) => {
+                            {sortedGhats.map((entry, index) => {
                               const isExpanded = expandedGhatIds.has(
                                 entry.ghat.id,
                               );
