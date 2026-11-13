@@ -1010,7 +1010,6 @@ export default function GhatsPage() {
                               <th scope="col">Sub-Division</th>
                               <th scope="col">Block</th>
                               <th scope="col">Nodal Officer</th>
-                              <th scope="col">Latest inspection</th>
                               <th scope="col">Readiness</th>
                               <th scope="col">
                                 <span className="visually-hidden">Actions</span>
@@ -1049,30 +1048,6 @@ export default function GhatsPage() {
                                     <div className="ghat-table__meta">
                                       {ghat.nodalOfficerContact}
                                     </div>
-                                  </td>
-                                  <td>
-                                    {latest ? (
-                                      <>
-                                        {formatDateRange(
-                                          latest.periodStart,
-                                          latest.periodEnd,
-                                        )}
-                                        <div className="ghat-table__meta">
-                                          {latest.occasion}
-                                        </div>
-                                        {latest.latitude != null &&
-                                          latest.longitude != null && (
-                                            <div className="ghat-table__meta">
-                                              {latest.latitude},{" "}
-                                              {latest.longitude}
-                                            </div>
-                                          )}
-                                      </>
-                                    ) : (
-                                      <span className="ghat-table__meta">
-                                        Not inspected
-                                      </span>
-                                    )}
                                   </td>
                                   <td>
                                     {!latest ? (
