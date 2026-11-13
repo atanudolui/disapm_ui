@@ -618,7 +618,7 @@ export default function ReportsPage() {
                         id="action-report-search"
                         labelText="Search report"
                         placeholder="Search ghats, areas, officers..."
-                        size="lg"
+                        size="sm"
                         value={reportSearch}
                         onChange={(event) => {
                           setReportSearch(event.currentTarget.value);
@@ -634,6 +634,7 @@ export default function ReportsPage() {
                         id="action-report-sub-division-filter"
                         titleText="Sub-Division"
                         label="Select sub-divisions"
+                        size="sm"
                         items={subDivisionOptions}
                         selectedItems={selectedSubDivisions}
                         itemToString={(item) => item ?? ""}
@@ -647,6 +648,7 @@ export default function ReportsPage() {
                         id="action-report-block-filter"
                         titleText="Block"
                         label="Select blocks"
+                        size="sm"
                         items={blockOptions}
                         selectedItems={selectedBlocks}
                         itemToString={(item) => item ?? ""}
@@ -660,6 +662,7 @@ export default function ReportsPage() {
                         id="action-report-status-filter"
                         titleText="Status"
                         label="Select statuses"
+                        size="sm"
                         items={statusOptions}
                         selectedItems={selectedStatuses}
                         itemToString={(item) => item ?? ""}
